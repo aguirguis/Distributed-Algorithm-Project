@@ -35,6 +35,7 @@ struct Process{
 int my_id;
 string my_ip;
 int my_port;
+int sock_client, sock_server;
 
 //Process neighbors[MAX_PROCESSES_NUM];
 
@@ -57,6 +58,41 @@ static void stop(int signum) {
 	exit(0);
 }
 
+static int sendP(string ip, int port, int seq_no){
+	 printf("server....\n");
+	 struct sockaddr_in remote;
+	 remote.sin_family = AF_INET;
+	 remote.sin_port = htons(port);	//send from any port, does not matter
+	 remote.sin_addr.s_addr = inet_addr(ip.c_str());
+	 socklen_t l = sizeof(remote);
+
+	 int s = sendto(sock_client, (const char *)&seq_no, sizeof(int),
+	        0, (const struct sockaddr *) &remote,
+	            l);
+	 printf("sent something? %d\n", s);
+	 char* buf[3];
+	 int ack = recvfrom(sock_client, (char*) buf, 3, 0, ( struct sockaddr *) &remote, &l);
+	 printf("Ack received? %d\n", ack);
+	 return ack;
+}
+
+static int recvP(string ip, int port){
+	 struct sockaddr_in remote;
+	 remote.sin_family = AF_INET;
+	 remote.sin_port = htons(port);	//send from any port, does not matter
+	 remote.sin_addr.s_addr = inet_addr(ip.c_str());
+
+	 socklen_t len;
+	 char buffer[sizeof(int)];
+	 int r = recvfrom(sock_server, (char *)buffer, sizeof(int),
+	                 0, ( struct sockaddr *) &remote,
+	                 &len);
+	 printf("recv something? %d\n", r);
+	 int ack = sendto(sock_server, "Ack", 3, 0, ( struct sockaddr *) &remote, len);
+	 printf("Ack sent? %d \n", ack);
+	 return ack;
+}
+
 int main(int argc, char** argv) {
 
 	//set signal handlers
@@ -76,7 +112,7 @@ int main(int argc, char** argv) {
 	//start listening for incoming UDP packets
 	printf("Initializing.\n");
 	//init server (listener socket)
-	 int sock_server = socket(AF_INET,SOCK_DGRAM,0);
+	 sock_server = socket(AF_INET,SOCK_DGRAM,0);
 	 struct sockaddr_in serv,client;
 	 memset(&serv, 0, sizeof(serv));
 	 memset(&client, 0, sizeof(client));
@@ -94,7 +130,7 @@ int main(int argc, char** argv) {
 	 }
 
 	//init client (receiving socket)
-	 int sock_client = socket(AF_INET,SOCK_DGRAM,0);
+	 sock_client = socket(AF_INET,SOCK_DGRAM,0);
 
 	 client.sin_family = AF_INET;
 	 client.sin_port = htons(my_port + 10);	//send from any port, does not matter
@@ -102,34 +138,13 @@ int main(int argc, char** argv) {
 
 	 if(!server){
 		 int b2 = bind(sock_client, (const struct sockaddr *)&client, l);
-		 printf("reult of bind is %d \n", b2);
+		 printf("result of bind is %d \n", b2);
 	 }
 
-	 printf("before send or receive\n");
 	 if(server){
-		 printf("server....\n");
-		 struct sockaddr_in remote;
-		 remote.sin_family = AF_INET;
-		 remote.sin_port = htons(client_port);	//send from any port, does not matter
-		 remote.sin_addr.s_addr = inet_addr(my_ip.c_str());
-		 int seq_no=0;
-		 int s = sendto(sock_server, (const char *)&seq_no, sizeof(int),
-		        0, (const struct sockaddr *) &remote,
-		            l);
-		 printf("sent something, result is %d \n", s);
+		 recvP(my_ip, client_port);
 	 }else{
-		 printf("my port is %d and I am receiving a message on %d \n", my_port+10, client_port);
-		 struct sockaddr_in remote;
-		 remote.sin_family = AF_INET;
-		 remote.sin_port = htons(client_port);	//send from any port, does not matter
-		 remote.sin_addr.s_addr = inet_addr(my_ip.c_str());
-
-		 socklen_t len;
-		 char buffer[sizeof(int)];
-		 int r = recvfrom(sock_client, (char *)buffer, sizeof(int),
-		                 0, ( struct sockaddr *) &remote,
-		                 &len);
-		 printf("received something, result is %d \n", r);
+		 sendP(my_ip, client_port, 0);
 	 }
 	 //wait until start signal
 	while(wait_for_start) {
