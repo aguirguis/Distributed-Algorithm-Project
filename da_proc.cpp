@@ -16,7 +16,9 @@
 #include <signal.h>
 #include <time.h>
 #include <string>
-#define MAX_PROCESSES_NUM 10;
+#include <iostream>
+#include <fstream>
+#define MAX_PROCESSES_NUM 10
 
 using namespace std;
 static int wait_for_start = 1;
@@ -25,6 +27,8 @@ struct Process{
 	string ip;
 	int port;
 };
+static int nb_of_processes;
+static Process processes[MAX_PROCESSES_NUM];
 
 //Process neighbors[MAX_PROCESSES_NUM];
 
@@ -59,7 +63,20 @@ int main(int argc, char** argv) {
 	//initialize application
 	//start listening for incoming UDP packets
 	printf("Initializing.\n");
-
+	int process_id = atoi(argv[1]);
+	ifstream membership (argv[2]);
+	if(membership.is_open()) {
+		membership >> nb_of_processes;
+		for(int i = 0; i < nb_of_processes; i++) {
+			membership >> processes[i].id;
+			membership >> processes[i].ip;
+			membership >> processes[i].port;
+		}
+	}
+	else {
+		printf("Fail To Open File");
+	}
+	membership.close();
 
 	//wait until start signal
 	while(wait_for_start) {
