@@ -21,9 +21,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <iostream>
+#include <fstream>
 
-#define MAX_PROCESSES_NUM 10;
-#define MSG_LEN 32;
+#define MAX_PROCESSES_NUM 10
+#define MSG_LEN 32
 
 using namespace std;
 static int wait_for_start = 1;
@@ -32,6 +34,8 @@ struct Process{
 	string ip;
 	int port;
 };
+static int nb_of_processes;
+static Process processes[MAX_PROCESSES_NUM];
 
 int my_id;
 string my_ip;
@@ -134,6 +138,21 @@ int main(int argc, char** argv) {
 	//initialize application
 	//start listening for incoming UDP packets
 	printf("Initializing.\n");
+	int process_id = atoi(argv[1]);
+	ifstream membership (argv[2]);
+	if(membership.is_open()) {
+		membership >> nb_of_processes;
+		for(int i = 0; i < nb_of_processes; i++) {
+			membership >> processes[i].id;
+			membership >> processes[i].ip;
+			membership >> processes[i].port;
+		}
+	}
+	else {
+		printf("Fail To Open File");
+	}
+	membership.close();
+
 	//init server (listener socket)
 	 sock_server = socket(AF_INET,SOCK_DGRAM,0);
 	 struct sockaddr_in serv,client;
@@ -170,6 +189,8 @@ int main(int argc, char** argv) {
 		 sendP(my_ip, client_port, 0);
 	 }
 	 //wait until start signal
+
+
 	while(wait_for_start) {
 		struct timespec sleep_time;
 		sleep_time.tv_sec = 0;
