@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <time.h>
 #include <string>
+#include <cerrno>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -66,13 +67,33 @@ static int sendP(string ip, int port, int seq_no){
 	 remote.sin_addr.s_addr = inet_addr(ip.c_str());
 	 socklen_t l = sizeof(remote);
 
-	 int s = sendto(sock_client, (const char *)&seq_no, sizeof(int),
-	        0, (const struct sockaddr *) &remote,
-	            l);
-	 printf("sent something? %d\n", s);
-	 char* buf[3];
-	 int ack = recvfrom(sock_client, (char*) buf, 3, 0, ( struct sockaddr *) &remote, &l);
-	 printf("Ack received? %d\n", ack);
+	 bool send_again = true;
+	 int ack = -1;
+	 while(send_again){
+		 int s = sendto(sock_client, (const char *)&seq_no, sizeof(int),
+				0, (const struct sockaddr *) &remote,
+					l);
+		 printf("sent something? %d\n", s);
+
+		 //Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
+		 fd_set set;
+		 struct timeval timeout;
+		 FD_ZERO(&set); /* clear the set */
+		 FD_SET(sock_client, &set); /* add our file descriptor to the set */
+		 timeout.tv_sec = 1; // SOCKET_READ_TIMEOUT_SEC;
+		 timeout.tv_usec = 0;
+		 int rv = select(sock_client+1, &set, NULL, NULL, &timeout);
+		 char* buf[3];
+		 if (rv == 0){
+			 printf("timeout, should send again!!\n");
+			 send_again = true;
+		 }else{
+			 ack = recvfrom(sock_client, (char*) buf, 3, 0, ( struct sockaddr *) &remote, &l);
+			 printf("Ack received? %d\n", ack);
+			 if(ack > 0)
+				 send_again = false;
+		 }
+	 }
 	 return ack;
 }
 
@@ -82,14 +103,16 @@ static int recvP(string ip, int port){
 	 remote.sin_port = htons(port);	//send from any port, does not matter
 	 remote.sin_addr.s_addr = inet_addr(ip.c_str());
 
-	 socklen_t len;
+	 socklen_t len = sizeof(remote);
 	 char buffer[sizeof(int)];
 	 int r = recvfrom(sock_server, (char *)buffer, sizeof(int),
 	                 0, ( struct sockaddr *) &remote,
 	                 &len);
 	 printf("recv something? %d\n", r);
-	 int ack = sendto(sock_server, "Ack", 3, 0, ( struct sockaddr *) &remote, len);
-	 printf("Ack sent? %d \n", ack);
+	 char * ackstr = "Ack";
+	 int ack = 0;
+	 ack = sendto(sock_server, (const char *)ackstr, strlen(ackstr), 0, (const struct sockaddr *) &remote, len);
+	 printf("Ack sent? %d\n", ack);
 	 return ack;
 }
 
