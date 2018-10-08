@@ -1,16 +1,3 @@
-/*
- * da_proc.cpp
- *
- *  Created on: 2 Oct 2018
- *      Author: aguirguis
- */
-
-/*
- * da_proc.cpp
- *
- *  Created on: 30 Sep 2018
- *      Author: aguirguis
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -23,9 +10,12 @@
 #include <sys/types.h>
 #include <iostream>
 #include <fstream>
+#include <netinet/in.h>
+#include <netdb.h>
 
 #define MAX_PROCESSES_NUM 10
 #define MSG_LEN 32
+#define MAX_LOG_FILE 100	//let's say after each 100 message, I will write to a file
 
 using namespace std;
 static int wait_for_start = 1;
@@ -33,11 +23,13 @@ struct Process{
 	int id;
 	string ip;
 	int port;
+	int* log; //using this 2D array, we write all what we have received from this process
+	int log_pointer;
 };
 static int nb_of_processes;
 static Process processes[MAX_PROCESSES_NUM];
 
-int my_id;
+int process_id;
 string my_ip;
 int my_port;
 int sock_client, sock_server;
@@ -48,6 +40,13 @@ static void start(int signum) {
 	wait_for_start = 0;
 }
 
+//This function writes the logs received to the log file...it takes proc_id as an input
+static void write_log(int proc_id){
+	for(int i=0;i<processes[proc_id].log_pointer;i++){
+		//TODO: write processes[proc_id].log[i] to file
+	}
+	processes[proc_id].log_pointer = 0;	//return the point to the beginning
+}
 static void stop(int signum) {
 	//reset signal handlers to default
 	signal(SIGTERM, SIG_DFL);
@@ -58,60 +57,76 @@ static void stop(int signum) {
 
 	//write/flush output file if necessary
 	printf("Writing output.\n");
+	for(Process p: processes)
+		if(p.id != process_id)
+			write_log(p.id);
 
 	//exit directly from signal handler
 	exit(0);
 }
 
-static int sendP(string ip, int port, int seq_no){
+static void sendP(string ip, int port, int* messages, int m_len){
 	 printf("server....\n");
 	 struct sockaddr_in remote;
 	 remote.sin_family = AF_INET;
 	 remote.sin_port = htons(port);	//send from any port, does not matter
 	 remote.sin_addr.s_addr = inet_addr(ip.c_str());
 	 socklen_t l = sizeof(remote);
+	 for(int i=0;i<m_len;i++){
+		 int seq_no = messages[i];
+		 bool send_again = true;
+		 int ack = -1;
+		 while(send_again){
+			 int s = sendto(sock_client, (const char *)&seq_no, sizeof(int),
+					0, (const struct sockaddr *) &remote,
+						l);
+			 printf("sent something? %d\n", s);
 
-	 bool send_again = true;
-	 int ack = -1;
-	 while(send_again){
-		 int s = sendto(sock_client, (const char *)&seq_no, sizeof(int),
-				0, (const struct sockaddr *) &remote,
-					l);
-		 printf("sent something? %d\n", s);
-
-		 //Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
-		 fd_set set;
-		 struct timeval timeout;
-		 FD_ZERO(&set); /* clear the set */
-		 FD_SET(sock_client, &set); /* add our file descriptor to the set */
-		 timeout.tv_sec = 1; // SOCKET_READ_TIMEOUT_SEC;
-		 timeout.tv_usec = 0;
-		 int rv = select(sock_client+1, &set, NULL, NULL, &timeout);
-		 char* buf[3];
-		 if (rv == 0){
-			 printf("timeout, should send again!!\n");
-			 send_again = true;
-		 }else{
-			 ack = recvfrom(sock_client, (char*) buf, 3, 0, ( struct sockaddr *) &remote, &l);
-			 printf("Ack received? %d\n", ack);
-			 if(ack > 0)
-				 send_again = false;
-		 }
-	 }
-	 return ack;
+			 //Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
+			 fd_set set;
+			 struct timeval timeout;
+			 FD_ZERO(&set); /* clear the set */
+			 FD_SET(sock_client, &set); /* add our file descriptor to the set */
+			 timeout.tv_sec = 1; // SOCKET_READ_TIMEOUT_SEC;
+			 timeout.tv_usec = 0;
+			 int rv = select(sock_client+1, &set, NULL, NULL, &timeout);
+			 char* buf[3];
+			 if (rv == 0){
+				 printf("timeout, should send again!!\n");
+				 send_again = true;
+			 }else{
+				 ack = recvfrom(sock_client, (char*) buf, 3, 0, ( struct sockaddr *) &remote, &l);
+				 printf("Ack received? %d\n", ack);
+				 if(ack > 0)
+					 send_again = false;
+			 }
+		 }//end while
+	}//end for
 }
 
-static int recvP(string ip, int port){
+static int recvP(){
 	 struct sockaddr_in remote;
-	 remote.sin_family = AF_INET;
-	 remote.sin_port = htons(port);	//send from any port, does not matter
-	 remote.sin_addr.s_addr = inet_addr(ip.c_str());
 
 	 socklen_t len = sizeof(remote);
 	 char buffer[sizeof(int)];
 	 int r = recvfrom(sock_server, (char *)buffer, sizeof(int),
 	                 0, ( struct sockaddr *) &remote,
 	                 &len);
+	 //received the something? who was the clinet? get it
+	 struct hostent *hostp;
+	 hostp = gethostbyaddr(( const char *) &remote.sin_addr.s_addr, sizeof(remote.sin_addr.s_addr), AF_INET);
+	 int recvID = -1;
+	 for(Process p: processes)
+		 if(p.ip.compare(hostp->h_name) == 0){
+			 recvID = p.id;
+			 break;
+		 }
+	 assert(recvID != -1);	//otherwise, there is a problem here!
+	 int num = atoi(buffer);
+	 processes[recvID].log[processes[recvID].log_pointer] = num;
+	 processes[recvID].log_pointer++;
+	 if(processes[recvID].log_pointer == MAX_LOG_FILE)
+		 write_log(recvID);
 	 printf("recv something? %d\n", r);
 	 char * ackstr = "Ack";
 	 int ack = 0;
@@ -128,9 +143,9 @@ int main(int argc, char** argv) {
 	signal(SIGINT, stop);
 
 	//Just for testing.......
-	my_ip="127.0.0.1";
-	my_port=atoi(argv[1]);
-	int client_port = atoi(argv[2]);
+//	my_ip="127.0.0.1";
+//	my_port=atoi(argv[1]);
+//	int client_port = atoi(argv[2]);
 	bool server = atoi(argv[3])==0?true:false;
 
 
@@ -138,7 +153,7 @@ int main(int argc, char** argv) {
 	//initialize application
 	//start listening for incoming UDP packets
 	printf("Initializing.\n");
-	int process_id = atoi(argv[1]);
+	process_id = atoi(argv[1]);
 	ifstream membership (argv[2]);
 	if(membership.is_open()) {
 		membership >> nb_of_processes;
@@ -146,12 +161,19 @@ int main(int argc, char** argv) {
 			membership >> processes[i].id;
 			membership >> processes[i].ip;
 			membership >> processes[i].port;
+			processes[i].log = new int[MAX_LOG_FILE];
+			processes[i].log_pointer = 0;	//starts writing from the begginng
 		}
 	}
 	else {
 		printf("Fail To Open File");
 	}
 	membership.close();
+
+	string my_ip = processes[process_id].ip;
+	int my_port = processes[process_id].port;
+
+//	int client_port = processes[1].port;
 
 	//init server (listener socket)
 	 sock_server = socket(AF_INET,SOCK_DGRAM,0);
@@ -184,9 +206,16 @@ int main(int argc, char** argv) {
 	 }
 
 	 if(server){
-		 recvP(my_ip, client_port);
+		 recvP();
 	 }else{
-		 sendP(my_ip, client_port, 0);
+		 //send to all other processes
+		 int m_len = 10;
+		 int* messages = new int[m_len];
+		 for(int i=0;i<m_len;i++)
+			 messages[i] = i;
+		 for(int i=0;i<nb_of_processes;i++)if(processes[i].id != process_id){
+			 sendP(processes[i].ip, processes[i].port, messages,m_len);
+		 }
 	 }
 	 //wait until start signal
 
