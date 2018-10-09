@@ -12,6 +12,7 @@
 #include <fstream>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <thread>         // std::thread
 
 #define MAX_PROCESSES_NUM 10
 #define MSG_LEN 32
@@ -167,7 +168,7 @@ int main(int argc, char** argv) {
 //	my_ip="127.0.0.1";
 //	my_port=atoi(argv[1]);
 //	int client_port = atoi(argv[2]);
-	bool server = atoi(argv[3])==0?true:false;
+//	bool server = atoi(argv[3])==0?true:false;
 
 
 	//parse arguments, including membership
@@ -189,8 +190,8 @@ int main(int argc, char** argv) {
 	}
 	membership.close();
 
-	my_ip = processes[process_id].ip;
-	my_port = processes[process_id].port;
+	my_ip = processes[process_id-1].ip;
+	my_port = processes[process_id-1].port;
 
 //	int client_port = processes[1].port;
 
@@ -207,10 +208,10 @@ int main(int argc, char** argv) {
 	 serv.sin_port = htons(my_port);
 	 serv.sin_addr.s_addr = inet_addr(my_ip.c_str());
 
-	 if(server){
-		 int b = bind(sock_server, (const struct sockaddr *)&serv, m);
-		 printf("result of bind: %d \n", b);
-	 }
+//	 if(server){
+	 int b = bind(sock_server, (const struct sockaddr *)&serv, m);
+	 printf("result of bind: %d \n", b);
+//	 }
 
 	//init client (receiving socket)
 	 sock_client = socket(AF_INET,SOCK_DGRAM,0);
@@ -219,14 +220,14 @@ int main(int argc, char** argv) {
 	 client.sin_port = htons(my_port + 10);	//send from any port, does not matter
 	 client.sin_addr.s_addr = inet_addr(my_ip.c_str());
 
-	 if(!server){
-		 int b2 = bind(sock_client, (const struct sockaddr *)&client, l);
-		 printf("result of bind is %d \n", b2);
-	 }
+//	 if(!server){
+	 int b2 = bind(sock_client, (const struct sockaddr *)&client, l);
+	 printf("result of bind is %d \n", b2);
+//	 }
 
-	 if(server){
-		 recvP();
-	 }else{
+//	 if(server){
+	std::thread recv(recvP);
+//	 }else{
 		 //send to all other processes
 		 int m_len = 10;
 		 int* messages = new int[m_len];
@@ -235,7 +236,7 @@ int main(int argc, char** argv) {
 		 for(int i=0;i<nb_of_processes;i++)if(processes[i].id != process_id){
 			 sendP(processes[i].ip, processes[i].port, messages,m_len);
 		 }
-	 }
+//	 }
 	 //wait until start signal
 
 
