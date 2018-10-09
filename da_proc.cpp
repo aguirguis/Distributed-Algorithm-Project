@@ -19,20 +19,26 @@
 
 using namespace std;
 static int wait_for_start = 1;
-struct Process{
+struct LogMessage {
+	char message_type;
+	int seq_nr;
+	int sender;
+};
+struct Process {
 	int id;
 	string ip;
 	int port;
-	int* log; //using this 2D array, we write all what we have received from this process
-	int log_pointer;
 };
-static int nb_of_processes;
-static Process processes[MAX_PROCESSES_NUM];
+
+int nb_of_processes;
+Process processes[MAX_PROCESSES_NUM];
 
 int process_id;
 string my_ip;
 int my_port;
 int sock_client, sock_server;
+LogMessage log[MAX_LOG_FILE];
+int log_pointer = 0;
 
 //Process neighbors[MAX_PROCESSES_NUM];
 
@@ -41,11 +47,20 @@ static void start(int signum) {
 }
 
 //This function writes the logs received to the log file...it takes proc_id as an input
-static void write_log(int proc_id){
-	for(int i=0;i<processes[proc_id].log_pointer;i++){
+static void write_log(){
+	ofstream out_file;
+	out_file.open("da_proc_" + to_string(process_id) + ".out");
+	for(int i = 0; i < log_pointer; i++) {
 		//TODO: write processes[proc_id].log[i] to file
+		if(log[i].message_type == 'b') {
+			out_file << "b " << log[i].seq_nr << "\n";
+		}
+		else {
+			out_file << "d " << log[i].sender << " " << log[i].seq_nr << "\n";
+		}
 	}
-	processes[proc_id].log_pointer = 0;	//return the point to the beginning
+	out_file.close();
+	log_pointer = 0;	//return the point to the beginning
 }
 static void stop(int signum) {
 	//reset signal handlers to default
@@ -57,9 +72,10 @@ static void stop(int signum) {
 
 	//write/flush output file if necessary
 	printf("Writing output.\n");
-	for(Process p: processes)
-		if(p.id != process_id)
-			write_log(p.id);
+	write_log();
+	// for(Process p: processes)
+	// 	if(p.id != process_id)
+	// 		write_log(p.id);
 
 	//exit directly from signal handler
 	exit(0);
@@ -81,6 +97,9 @@ static void sendP(string ip, int port, int* messages, int m_len){
 					0, (const struct sockaddr *) &remote,
 						l);
 			 printf("sent something? %d\n", s);
+			 log[log_pointer].message_type = 'b';
+			 log[log_pointer].seq_nr = seq_no;
+			 log_pointer++;
 
 			 //Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
 			 fd_set set;
@@ -123,10 +142,12 @@ static int recvP(){
 		 }
 	 assert(recvID != -1);	//otherwise, there is a problem here!
 	 int num = atoi(buffer);
-	 processes[recvID].log[processes[recvID].log_pointer] = num;
-	 processes[recvID].log_pointer++;
-	 if(processes[recvID].log_pointer == MAX_LOG_FILE)
-		 write_log(recvID);
+	 log[log_pointer].message_type = 'd';
+	 log[log_pointer].sender = recvID;
+	 log[log_pointer].seq_nr = num;
+	 log_pointer++;
+	 if(log_pointer == MAX_LOG_FILE)
+		 write_log();
 	 printf("recv something? %d\n", r);
 	 char * ackstr = "Ack";
 	 int ack = 0;
@@ -161,8 +182,6 @@ int main(int argc, char** argv) {
 			membership >> processes[i].id;
 			membership >> processes[i].ip;
 			membership >> processes[i].port;
-			processes[i].log = new int[MAX_LOG_FILE];
-			processes[i].log_pointer = 0;	//starts writing from the begginng
 		}
 	}
 	else {
@@ -170,8 +189,8 @@ int main(int argc, char** argv) {
 	}
 	membership.close();
 
-	string my_ip = processes[process_id].ip;
-	int my_port = processes[process_id].port;
+	my_ip = processes[process_id].ip;
+	my_port = processes[process_id].port;
 
 //	int client_port = processes[1].port;
 
@@ -240,5 +259,3 @@ int main(int argc, char** argv) {
 		nanosleep(&sleep_time, NULL);
 	}
 }
-
-
