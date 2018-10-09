@@ -1,1 +1,4 @@
 /Debug/
+!*.cpp
+!*.txt
+!*.md
