@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <thread>         // std::thread
+#include "structures.h"
 
 #define MAX_PROCESSES_NUM 10
 #define MSG_LEN 32
@@ -20,16 +21,6 @@
 
 using namespace std;
 static int wait_for_start = 1;
-struct LogMessage {
-	char message_type;
-	int seq_nr;
-	int sender;
-};
-struct Process {
-	int id;
-	string ip;
-	int port;
-};
 
 int nb_of_processes;
 Process processes[MAX_PROCESSES_NUM];
