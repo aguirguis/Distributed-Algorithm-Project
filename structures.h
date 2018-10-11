@@ -3,7 +3,7 @@
 using namespace std;
 
 #define MAX_PROCESSES_NUM 10
-#define MSG_LEN 32
+#define MSG_LEN 64
 #define MAX_LOG_FILE 100	//let's say after each 100 message, I will write to a file
 
 int nb_of_processes;
