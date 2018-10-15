@@ -1,10 +1,13 @@
 #include <string>
-#include "structures.h"
+#include "perfect_link.h"
 using namespace std;
 
-class perfect_link {
 
-    public:
-        void send(Message message, int to) {}
-        void deliver(Message message, int from) {}
-};
+void perfect_link::send(Message message, int to) {
+
+}
+
+void perfect_link::deliver(void* callback) {
+	//This callback should be called once something is received
+
+}

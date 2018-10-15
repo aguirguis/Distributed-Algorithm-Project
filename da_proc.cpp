@@ -13,7 +13,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <thread>         // std::thread
-#include "structures.h"
+#include "perfect_link.h"
 
 using namespace std;
 
@@ -30,7 +30,7 @@ static void write_log(){
 	ofstream out_file;
 	out_file.open("da_proc_" + to_string(process_id) + ".out");
 	for(int i = 0; i < log_pointer; i++) {
-		//TODO: write processes[proc_id].log[i] to file
+		//write processes[proc_id].log[i] to file
 		if(log[i].message_type == 'b') {
 			out_file << "b " << log[i].seq_nr << "\n";
 		}
@@ -142,12 +142,6 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, stop);
 	signal(SIGINT, stop);
 
-	//Just for testing.......
-//	my_ip="127.0.0.1";
-//	my_port=atoi(argv[1]);
-//	int client_port = atoi(argv[2]);
-//	bool server = atoi(argv[3])==0?true:false;
-
 
 	//parse arguments, including membership
 	//initialize application
@@ -186,10 +180,8 @@ int main(int argc, char** argv) {
 	 serv.sin_port = htons(my_port);
 	 serv.sin_addr.s_addr = inet_addr(my_ip.c_str());
 
-//	 if(server){
 	 int b = bind(sock_server, (const struct sockaddr *)&serv, m);
 	 printf("result of bind: %d \n", b);
-//	 }
 
 	//init client (receiving socket)
 	 sock_client = socket(AF_INET,SOCK_DGRAM,0);
@@ -198,23 +190,9 @@ int main(int argc, char** argv) {
 	 client.sin_port = htons(my_port + 10);	//send from any port, does not matter
 	 client.sin_addr.s_addr = inet_addr(my_ip.c_str());
 
-//	 if(!server){
 	 int b2 = bind(sock_client, (const struct sockaddr *)&client, l);
 	 printf("result of bind is %d \n", b2);
-//	 }
 
-//	 if(server){
-	std::thread recv(recvP);
-//	 }else{
-		 //send to all other processes
-		 int m_len = 10;
-		 int* messages = new int[m_len];
-		 for(int i=0;i<m_len;i++)
-			 messages[i] = i;
-		 for(int i=0;i<nb_of_processes;i++)if(processes[i].id != process_id){
-			 sendP(processes[i].ip, processes[i].port, messages,m_len);
-		 }
-//	 }
 	 //wait until start signal
 
 
