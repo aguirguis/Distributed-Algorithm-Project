@@ -14,7 +14,7 @@ void beb::init(void ( *callback )()){
 
 	 //start receiving thread
 	 if(callback == NULL)
-		 recv = std::thread(&perfect_link::deliver, &(*recv_link), &beb::beb_deliver);
+		 recv = std::thread(&perfect_link::deliver, &(*recv_link), &beb::pl_deliver);
 	 else
 		 recv = std::thread(&perfect_link::deliver, &(*recv_link), callback);
 }

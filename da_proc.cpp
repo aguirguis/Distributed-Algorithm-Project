@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
-#include <string>
+#include <string.h>
 #include <cerrno>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -13,7 +13,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <thread>         // std::thread
-#include "perfect_link.h"
+#include <assert.h>
+#include "beb.h"
 
 using namespace std;
 
