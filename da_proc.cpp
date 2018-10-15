@@ -26,22 +26,6 @@ static void start(int signum) {
 	wait_for_start = 0;
 }
 
-//This function writes the logs received to the log file...it takes proc_id as an input
-static void write_log(){
-	ofstream out_file;
-	out_file.open("da_proc_" + to_string(process_id) + ".out");
-	for(int i = 0; i < log_pointer; i++) {
-		//write processes[proc_id].log[i] to file
-		if(log[i].message_type == 'b') {
-			out_file << "b " << log[i].seq_nr << "\n";
-		}
-		else {
-			out_file << "d " << log[i].sender << " " << log[i].seq_nr << "\n";
-		}
-	}
-	out_file.close();
-	log_pointer = 0;	//return the point to the beginning
-}
 static void stop(int signum) {
 	//reset signal handlers to default
 	signal(SIGTERM, SIG_DFL);
