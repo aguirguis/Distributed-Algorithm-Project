@@ -146,7 +146,8 @@ int main(int argc, char** argv) {
 		printf("Fail To Open File");
 	}
 	membership.close();
-
+	//init output file
+	out_file.open("da_proc_" + to_string(process_id) + ".out");
 	my_ip = processes[process_id-1].ip;
 	my_port = processes[process_id-1].port;
 
