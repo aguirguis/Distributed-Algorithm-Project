@@ -7,8 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <thread>         // std::thread
-//#include "beb.h"
-#include "structures.h"
+#include "beb.h"
+
 using namespace std;
 
 static int wait_for_start = 1;
