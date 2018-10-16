@@ -1,6 +1,9 @@
 #include <string>
 #include <fstream>
 
+#ifndef STRUCTURES_H_
+#define STRUCTURES_H_
+
 using namespace std;
 
 struct Message {
@@ -58,8 +61,9 @@ static void write_log(){
 	log_pointer = 0;	//return the point to the beginning
 }
 
-//(TODO: there is no need for the second argument as it is already in the message)
 class deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
     public:
-        virtual void deliver(Message, int);
+        void deliver(Message){}
 };
+
+#endif

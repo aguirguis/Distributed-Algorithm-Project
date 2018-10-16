@@ -60,7 +60,7 @@ void perfect_link::send(Message message, int to) {
     @param callback: the callback function contains the action to be performed
                         when message is received
 */
-void perfect_link::deliver(void* callback) {
+void perfect_link::deliver(deliver_callback callback) {
     struct sockaddr_in addr_sender;
     socklen_t addr_sender_size = sizeof(addr_sender);
     struct Message message;
@@ -84,13 +84,13 @@ void perfect_link::deliver(void* callback) {
         // assert(recvID != -1);	//otherwise, there is a problem here!
 
         // deliver the received message (TODO: there is no need for the second argument as it is already in the message)
-        ((deliver_callback *)callback) -> deliver(message, message.sender);
+        callback.deliver(message);
 
         // add to delivered
         delivered.insert(message);
 
         // send an ACK
-        char * ackstr = "Ack";
+        const char * ackstr = "Ack";
         int ack = 0;
         ack = sendto(send_sock, (const char *)ackstr, strlen(ackstr), 0, (const struct sockaddr *) &addr_sender, addr_sender_size);
         printf("Ack sent? %d\n", ack);
