@@ -13,6 +13,7 @@ using namespace std;
 */
 void perfect_link::send(Message message, int to) {
     printf("sending through perfect link to %d\n", to);
+    message.sender = my_process_id;
 
     // prepare the receiver socket address
     struct sockaddr_in addr_receiver;
@@ -25,7 +26,7 @@ void perfect_link::send(Message message, int to) {
     bool send_again = true;
     int ack = -1;
     while(send_again){
-        if(!sendto(sockets[to], (const char *)&message, sizeof(message), 0, (const struct sockaddr *) &addr_receiver, addr_receiver_size))
+        if(!sendto(send_sock, (const char *)&message, sizeof(message), 0, (const struct sockaddr *) &addr_receiver, addr_receiver_size))
         {
             printf("Sending message throught the socket was not successful\n");
         }
@@ -33,11 +34,11 @@ void perfect_link::send(Message message, int to) {
         //Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
         fd_set set;
         FD_ZERO(&set); /* clear the set */
-        FD_SET(sockets[to], &set); /* add our socket to the set */
+        FD_SET(send_sock, &set); /* add our socket to the set */
         struct timeval timeout;
         timeout.tv_sec = 1; // SOCKET_READ_TIMEOUT_SEC;
         timeout.tv_usec = 0;
-        int recVal = select(sockets[to] + 1, &set, NULL, NULL, &timeout);
+        int recVal = select(send_sock + 1, &set, NULL, NULL, &timeout);
         char* buf[3];
         if (recVal == 0)
         {
@@ -46,7 +47,7 @@ void perfect_link::send(Message message, int to) {
         }
         else
         {
-            ack = recvfrom(sockets[to], (char*) buf, 3, 0, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
+            ack = recvfrom(send_sock, (char*) buf, 3, 0, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
             printf("Ack received? %d\n", ack);
             if(ack > 0)
                 send_again = false;
@@ -63,27 +64,27 @@ void perfect_link::deliver(void* callback) {
     struct sockaddr_in addr_sender;
     socklen_t addr_sender_size = sizeof(addr_sender);
     struct Message message;
-    int r = recvfrom(sockets[my_process_id], &message, sizeof(message), 0, ( struct sockaddr *) &addr_sender, &addr_sender_size);
+    int r = recvfrom(recv_sock, &message, sizeof(message), 0, ( struct sockaddr *) &addr_sender, &addr_sender_size);
     printf("recv something? %d\n", r);
 
     // check if message is already delivered
     const bool is_delivered = delivered.find(message) != delivered.end();
 
     if(!is_delivered) {
-        //ientify the direct sender of the message
-        struct hostent *hostp;
-        hostp = gethostbyaddr((const char *) &addr_sender.sin_addr.s_addr, sizeof(addr_sender.sin_addr.s_addr), AF_INET);
-        int recvID = -1;
-        for(int i = 1; i <= nb_of_processes; i++) {
-            if(processes[i].ip.compare(hostp->h_name) == 0){
-                recvID = processes[i].id;
-                break;
-            }
-        }
-        assert(recvID != -1);	//otherwise, there is a problem here!
+        // //ientify the direct sender of the message
+        // struct hostent *hostp;
+        // hostp = gethostbyaddr((const char *) &addr_sender.sin_addr.s_addr, sizeof(addr_sender.sin_addr.s_addr), AF_INET);
+        // int recvID = -1;
+        // for(int i = 1; i <= nb_of_processes; i++) {
+        //     if(processes[i].ip.compare(hostp->h_name) == 0){
+        //         recvID = processes[i].id;
+        //         break;
+        //     }
+        // }
+        // assert(recvID != -1);	//otherwise, there is a problem here!
 
-        // deliver the received message
-        ((deliver_callback *)callback) -> deliver(message, recvID);
+        // deliver the received message (TODO: there is no need for the second argument as it is already in the message)
+        ((deliver_callback *)callback) -> deliver(message, message.sender);
 
         // add to delivered
         delivered.insert(message);
@@ -91,7 +92,7 @@ void perfect_link::deliver(void* callback) {
         // send an ACK
         char * ackstr = "Ack";
         int ack = 0;
-        ack = sendto(sockets[recvID], (const char *)ackstr, strlen(ackstr), 0, (const struct sockaddr *) &addr_sender, addr_sender_size);
+        ack = sendto(send_sock, (const char *)ackstr, strlen(ackstr), 0, (const struct sockaddr *) &addr_sender, addr_sender_size);
         printf("Ack sent? %d\n", ack);
     }
 }

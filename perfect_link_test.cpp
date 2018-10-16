@@ -1,52 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <iostream>
 #include <fstream>
 #include <thread>         // std::thread
-#include "beb.h"
-
+#include "perfect_link.h"
 using namespace std;
 
-static int wait_for_start = 1;
-
-//Process neighbors[MAX_PROCESSES_NUM];
-
-static void start(int signum) {
-	wait_for_start = 0;
-}
-
-static void stop(int signum) {
-	//reset signal handlers to default
-	signal(SIGTERM, SIG_DFL);
-	signal(SIGINT, SIG_DFL);
-
-	//immediately stop network packet processing
-	printf("Immediately stopping network packet processing.\n");
-
-	//write/flush output file if necessary
-	printf("Writing output.\n");
-	write_log();
-	out_file.close();
-
-	//exit directly from signal handler
-	exit(0);
-}
+class pl_deliver_callback : public deliver_callback {
+    public:
+        void deliver(Message message, int sender) {
+            printf("prcoess %d has received message of sequence number %d from process %d\n", my_process_id, message.seq_no, sender);
+        }
+};
 
 int main(int argc, char** argv) {
 
-	//set signal handlers
-	signal(SIGUSR1, start);
-	signal(SIGTERM, stop);
-	signal(SIGINT, stop);
-
-
-	//parse arguments, including membership
-	//initialize application
-	printf("Initializing.\n");
+    printf("Initializing.\n");
 	my_process_id = atoi(argv[1]);
 	ifstream membership (argv[2]);
 	if(membership.is_open()) {
@@ -89,25 +61,17 @@ int main(int argc, char** argv) {
 		printf("Fail to bind the sending socket of process %d \n", my_process_id);
 	}
 
-	 //wait until start signal
-	while(wait_for_start) {
-		struct timespec sleep_time;
-		sleep_time.tv_sec = 0;
-		sleep_time.tv_nsec = 1000;
-		nanosleep(&sleep_time, NULL);
-	}
+    if(my_process_id == 1) {
+        Message message;
+        message.seq_no = message.sender = message.initial_sender = 1;
+        perfect_link* pl = new perfect_link();
+        pl -> send(message, 2);
+    }
+    else {
+        pl_deliver_callback* callback = new pl_deliver_callback();
+        perfect_link* pl = new perfect_link();
+        pl -> deliver(callback);
+    }
 
-
-	//broadcast messages
-	printf("Broadcasting messages.\n");
-
-
-	//wait until stopped
-	while(1) {
-		struct timespec sleep_time;
-		sleep_time.tv_sec = 1;
-		sleep_time.tv_nsec = 0;
-		nanosleep(&sleep_time, NULL);
-	}
-	out_file.close();
+    return 0;
 }
