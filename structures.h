@@ -13,7 +13,7 @@ struct Message {
 };
 
 // Message comparator / Functor
-// Compare objects with sequence number then with sender id
+// Compare objects with sequence number then with initial_sender id
 struct MessageComp
 {
 	bool operator()(const Message& msg1, const Message& msg2) const
@@ -38,17 +38,16 @@ struct Process {
 #define MSG_LEN 64
 #define MAX_LOG_FILE 100	//let's say after each 100 message, I will write to a file
 
-int nb_of_processes;
-Process processes[MAX_PROCESSES_NUM + 1];
-// int sockets[MAX_PROCESSES_NUM + 1];
+extern int nb_of_processes;
+extern Process processes[MAX_PROCESSES_NUM + 1];
 
-int my_process_id;
-string my_ip;
-int my_port;
-int send_sock, recv_sock;
-LogMessage messages_log[MAX_LOG_FILE];
-int log_pointer = 0;
-ofstream out_file;
+extern int my_process_id;
+extern string my_ip;
+extern int my_port;
+extern int send_sock, recv_sock;
+extern LogMessage messages_log[MAX_LOG_FILE];
+extern int log_pointer;
+extern ofstream out_file;
 
 //This function writes the logs received to the log file
 static void write_log(){
@@ -63,7 +62,7 @@ static void write_log(){
 
 class deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
     public:
-        void deliver(Message){}
+        void deliver(Message) {}
 };
 
-#endif
+#endif /* STRUCTURES_H_ */

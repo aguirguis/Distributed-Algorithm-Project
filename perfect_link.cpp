@@ -60,7 +60,7 @@ void perfect_link::send(Message message, int to) {
     @param callback: the callback function contains the action to be performed
                         when message is received
 */
-void perfect_link::deliver(deliver_callback callback) {
+void perfect_link::deliver(deliver_callback bclass) {
     struct sockaddr_in addr_sender;
     socklen_t addr_sender_size = sizeof(addr_sender);
     struct Message message;
@@ -71,20 +71,8 @@ void perfect_link::deliver(deliver_callback callback) {
     const bool is_delivered = delivered.find(message) != delivered.end();
 
     if(!is_delivered) {
-        // //ientify the direct sender of the message
-        // struct hostent *hostp;
-        // hostp = gethostbyaddr((const char *) &addr_sender.sin_addr.s_addr, sizeof(addr_sender.sin_addr.s_addr), AF_INET);
-        // int recvID = -1;
-        // for(int i = 1; i <= nb_of_processes; i++) {
-        //     if(processes[i].ip.compare(hostp->h_name) == 0){
-        //         recvID = processes[i].id;
-        //         break;
-        //     }
-        // }
-        // assert(recvID != -1);	//otherwise, there is a problem here!
-
-        // deliver the received message (TODO: there is no need for the second argument as it is already in the message)
-        callback.deliver(message);
+        // deliver the received message
+        bclass.deliver(message);
 
         // add to delivered
         delivered.insert(message);

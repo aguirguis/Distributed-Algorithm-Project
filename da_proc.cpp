@@ -36,6 +36,29 @@ static void stop(int signum) {
 	exit(0);
 }
 
+class pl_deliver_callback : public deliver_callback {
+    public:
+        void deliver(Message message) {
+            printf("prcoess %d has received message of sequence number %d from process %d\n", my_process_id, message.seq_no, message.sender);
+        }
+};
+
+void test_perfect_link() {
+
+    if(my_process_id == 1) {
+        Message message;
+        message.seq_no = message.sender = message.initial_sender = 1;
+        perfect_link* pl = new perfect_link();
+        pl -> send(message, 2);
+    }
+    else {
+        pl_deliver_callback* callback = new pl_deliver_callback();
+        perfect_link* pl = new perfect_link();
+        pl -> deliver(*callback);
+    }
+
+}
+
 int main(int argc, char** argv) {
 
 	//set signal handlers
@@ -73,7 +96,7 @@ int main(int argc, char** argv) {
 	recv_addr.sin_family = AF_INET;
 	recv_addr.sin_port = htons(my_port);
 	recv_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-	if(!bind(recv_sock, (const struct sockaddr *)&recv_addr, recv_addr_size)) {
+	if(bind(recv_sock, (const struct sockaddr *)&recv_addr, recv_addr_size) == SO_ERROR) {
 		printf("Fail to bind the receive socket of process %d \n", my_process_id);
 	}
 
@@ -85,29 +108,32 @@ int main(int argc, char** argv) {
 	send_addr.sin_family = AF_INET;
 	send_addr.sin_port = htons(my_port + 1000);
 	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-	if(!bind(send_sock, (const struct sockaddr *)&send_addr, send_addr_size)) {
+	if(bind(send_sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
 		printf("Fail to bind the sending socket of process %d \n", my_process_id);
 	}
 
-	 //wait until start signal
-	while(wait_for_start) {
-		struct timespec sleep_time;
-		sleep_time.tv_sec = 0;
-		sleep_time.tv_nsec = 1000;
-		nanosleep(&sleep_time, NULL);
-	}
+	// test perfect links
+	test_perfect_link();
 
-
-	//broadcast messages
-	printf("Broadcasting messages.\n");
-
-
-	//wait until stopped
-	while(1) {
-		struct timespec sleep_time;
-		sleep_time.tv_sec = 1;
-		sleep_time.tv_nsec = 0;
-		nanosleep(&sleep_time, NULL);
-	}
+	//  //wait until start signal
+	// while(wait_for_start) {
+	// 	struct timespec sleep_time;
+	// 	sleep_time.tv_sec = 0;
+	// 	sleep_time.tv_nsec = 1000;
+	// 	nanosleep(&sleep_time, NULL);
+	// }
+	//
+	//
+	// //broadcast messages
+	// printf("Broadcasting messages.\n");
+	//
+	//
+	// //wait until stopped
+	// while(1) {
+	// 	struct timespec sleep_time;
+	// 	sleep_time.tv_sec = 1;
+	// 	sleep_time.tv_nsec = 0;
+	// 	nanosleep(&sleep_time, NULL);
+	// }
 	out_file.close();
 }
