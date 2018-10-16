@@ -11,7 +11,7 @@
 #ifndef BEB_H_
 #define BEB_H_
 
-class beb {
+class beb: public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
 
     public:
 		std::thread* links;
@@ -23,7 +23,7 @@ class beb {
 		//If some callback is passed, it will be called on receive..otherwise, beb callback will be called
         void bebBroadcast(Message message);
         void beb_deliver(Message message, int from);
-        void pl_deliver(Message message, int from);
+        void deliver(Message message, int from);
 };
 
 

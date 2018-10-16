@@ -14,16 +14,16 @@ void beb::init(void ( *callback )()){
 
 	 //start receiving thread
 	 if(callback == NULL)
-		 recv = std::thread(&perfect_link::deliver, &(*recv_link), &beb::pl_deliver);
+		 recv = std::thread(&perfect_link::deliver, &(*recv_link), &beb::deliver);
 	 else
 		 recv = std::thread(&perfect_link::deliver, &(*recv_link), callback);
 }
 
 void beb::bebBroadcast(Message message) {
- message.sender = process_id;
+ message.sender = my_process_id;
 
  //send this message to all processes
- for(int i=0;i<nb_of_processes;i++)if(processes[i].id != process_id){
+ for(int i=0;i<nb_of_processes;i++)if(processes[i].id != my_process_id){
 	links[i] = std::thread(&perfect_link::deliver, &(*pl[i]), message, processes[i].id);
  }
 
@@ -34,6 +34,6 @@ void beb::beb_deliver(Message message, int from) {
 	cout << "received " << message.seq_no << "from " << from << endl;
 }
 
-void beb::pl_deliver(Message message, int from) {
+void beb::deliver(Message message, int from) {
 	beb_deliver(message, from);
 }

@@ -29,24 +29,11 @@ static void stop(int signum) {
 
 	//write/flush output file if necessary
 	printf("Writing output.\n");
-	// write_log();
+	write_log();
+	out_file.close();
 
 	//exit directly from signal handler
 	exit(0);
-}
-
-//This function writes the logs received to the log file
-static void write_log(){
-	ofstream out_file;
-	out_file.open("da_proc_" + to_string(my_process_id) + ".out");
-	for(int i = 0; i < log_pointer; i++) {
-		if(messages_log[i].message_type == 'b')
-			out_file << "b " << messages_log[i].seq_nr << "\n";
-		else
-			out_file << "d " << messages_log[i].sender << " " << messages_log[i].seq_nr << "\n";
-	}
-	out_file.close();
-	log_pointer = 0;	//return the point to the beginning
 }
 
 int main(int argc, char** argv) {
@@ -82,6 +69,7 @@ int main(int argc, char** argv) {
                 printf("Fail to bind socket of process %d \n", i);
             }
 		}
+		out_file.open("da_proc_" + to_string(my_process_id) + ".out");
 	}
 	else {
 		printf("Fail To Open File");
@@ -110,4 +98,5 @@ int main(int argc, char** argv) {
 		sleep_time.tv_nsec = 0;
 		nanosleep(&sleep_time, NULL);
 	}
+	out_file.close();
 }

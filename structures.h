@@ -1,10 +1,12 @@
 #include <string>
+#include <fstream>
 
 using namespace std;
 
 struct Message {
     int seq_no;
-    int sender;
+    int sender;				//last hop = immediate sender
+    int initial_sender;		//the initial sender
 };
 
 // Message comparator / Functor
@@ -42,8 +44,20 @@ string my_ip;
 int my_port;
 LogMessage messages_log[MAX_LOG_FILE];
 int log_pointer = 0;
+ofstream out_file;
 
-class deliver_callback {
+//This function writes the logs received to the log file
+static void write_log(){
+	for(int i = 0; i < log_pointer; i++) {
+		if(messages_log[i].message_type == 'b')
+			out_file << "b " << messages_log[i].seq_nr << "\n";
+		else
+			out_file << "d " << messages_log[i].sender << " " << messages_log[i].seq_nr << "\n";
+	}
+	log_pointer = 0;	//return the point to the beginning
+}
+
+class deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
     public:
         virtual void deliver(Message, int);
 };
