@@ -46,6 +46,10 @@ LogMessage messages_log[MAX_LOG_FILE];
 int log_pointer = 0;
 ofstream out_file;
 
+enum broadcast_type{
+	beb, urb, fifo, lcb
+};
+
 //This function writes the logs received to the log file
 static void write_log(){
 	for(int i = 0; i < log_pointer; i++) {
