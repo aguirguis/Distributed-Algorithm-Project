@@ -62,7 +62,7 @@ static void write_log(){
 
 class deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
     public:
-        void deliver(Message) {}
+        virtual void deliver(Message) = 0;
 };
 
 #endif /* STRUCTURES_H_ */

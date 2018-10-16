@@ -60,7 +60,7 @@ void perfect_link::send(Message message, int to) {
     @param callback: the callback function contains the action to be performed
                         when message is received
 */
-void perfect_link::deliver(deliver_callback bclass) {
+void perfect_link::deliver(deliver_callback *bclass) {
     struct sockaddr_in addr_sender;
     socklen_t addr_sender_size = sizeof(addr_sender);
     struct Message message;
@@ -72,7 +72,7 @@ void perfect_link::deliver(deliver_callback bclass) {
 
     if(!is_delivered) {
         // deliver the received message
-        bclass.deliver(message);
+        bclass -> deliver(message);
 
         // add to delivered
         delivered.insert(message);

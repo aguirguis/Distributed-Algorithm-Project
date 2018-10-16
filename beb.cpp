@@ -16,7 +16,7 @@ void beb::init(deliver_callback* bclass){
 	 if(bclass == NULL)
 		 bclass = this;
 
-	 recv = std::thread(&perfect_link::deliver, recv_link, std::ref(*bclass));
+	 recv = std::thread(&perfect_link::deliver, recv_link, std::ref(bclass));
 }
 
 void beb::bebBroadcast(Message message) {

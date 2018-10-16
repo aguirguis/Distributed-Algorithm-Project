@@ -54,7 +54,7 @@ void test_perfect_link() {
     else {
         pl_deliver_callback* callback = new pl_deliver_callback();
         perfect_link* pl = new perfect_link();
-        pl -> deliver(*callback);
+        pl -> deliver(callback);
     }
 
 }

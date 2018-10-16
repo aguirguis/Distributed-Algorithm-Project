@@ -18,7 +18,7 @@ class perfect_link {
 
     public:
         void send(Message message, int to);
-        void deliver(deliver_callback bclass);
+        void deliver(deliver_callback *bclass);
 };
 
 
