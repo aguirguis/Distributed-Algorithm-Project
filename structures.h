@@ -35,20 +35,16 @@ struct Process {
 #define MSG_LEN 64
 #define MAX_LOG_FILE 100	//let's say after each 100 message, I will write to a file
 
-int nb_of_processes;
-Process processes[MAX_PROCESSES_NUM + 1];
-int sockets[MAX_PROCESSES_NUM + 1];
+static int nb_of_processes;
+static Process processes[MAX_PROCESSES_NUM + 1];
+static int sockets[MAX_PROCESSES_NUM + 1];
 
-int my_process_id;
-string my_ip;
-int my_port;
-LogMessage messages_log[MAX_LOG_FILE];
-int log_pointer = 0;
-ofstream out_file;
-
-enum broadcast_type{
-	beb, urb, fifo, lcb
-};
+static int my_process_id;
+static string my_ip;
+static int my_port;
+static LogMessage messages_log[MAX_LOG_FILE];
+static int log_pointer = 0;
+static ofstream out_file;
 
 //This function writes the logs received to the log file
 static void write_log(){
@@ -61,7 +57,7 @@ static void write_log(){
 	log_pointer = 0;	//return the point to the beginning
 }
 
-class deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
+class deliver_callback {
     public:
-        virtual void deliver(Message, int);
+        void deliver(Message, int){}
 };

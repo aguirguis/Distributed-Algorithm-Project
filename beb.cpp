@@ -52,8 +52,3 @@ void beb::beb_deliver(Message message, int from) {
 void beb::deliver(Message message, int from) {
 	beb_deliver(message, from);
 }
-
-int main(){
-//	beb b;
-//	b.init(&beb::beb_deliver);
-}
