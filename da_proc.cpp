@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <thread>         // std::thread
+#include <unistd.h>			//sleep
 #include "beb.h"
 
 using namespace std;
@@ -28,7 +29,7 @@ static void stop(int signum) {
 	printf("Immediately stopping network packet processing.\n");
 
 	//write/flush output file if necessary
-	printf("Writing output.\n");
+	printf("Writing output....number of lines in log: %d \n", log_pointer);
 	write_log();
 	out_file.close();
 
@@ -36,7 +37,7 @@ static void stop(int signum) {
 	exit(0);
 }
 
-class pl_deliver_callback : public deliver_callback {
+class pl_deliver_callback : public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
     public:
         void deliver(Message message) {
             printf("prcoess %d has received message of sequence number %d from process %d\n", my_process_id, message.seq_no, message.sender);
@@ -56,7 +57,16 @@ void test_perfect_link() {
         perfect_link* pl = new perfect_link();
         pl -> deliver(callback);
     }
+}
 
+void test_bebBroadcast(){
+	beb bb;
+	bb.init(0);
+	sleep(10);
+	Message m;
+	m.seq_no = 0;
+	bb.bebBroadcast(m);
+	bb.recv.join();
 }
 
 int main(int argc, char** argv) {
@@ -74,19 +84,19 @@ int main(int argc, char** argv) {
 	ifstream membership (argv[2]);
 	if(membership.is_open()) {
 		membership >> nb_of_processes;
-		for(int i = 1; i <= nb_of_processes; i++) {
+		for(int i = 0; i < nb_of_processes; i++) {
 			membership >> processes[i].id;
 			membership >> processes[i].ip;
 			membership >> processes[i].port;
 		}
-		out_file.open("da_proc_" + to_string(my_process_id) + ".out");
+		out_file.open("da_proc_" + to_string(my_process_id) + ".txt");
 	}
 	else {
 		printf("Fail To Open File");
 	}
 	membership.close();
-	my_ip = processes[my_process_id].ip;
-	my_port = processes[my_process_id].port;
+	my_ip = processes[my_process_id - 1].ip;
+	my_port = processes[my_process_id - 1].port;
 
 	// create the recv socket that the process will be listening on
 	recv_sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -113,7 +123,10 @@ int main(int argc, char** argv) {
 	}
 
 	// test perfect links
-	test_perfect_link();
+	//test_perfect_link();
+
+	//test bebBroadcast
+	test_bebBroadcast();
 
 	//  //wait until start signal
 	// while(wait_for_start) {
@@ -135,5 +148,5 @@ int main(int argc, char** argv) {
 	// 	sleep_time.tv_nsec = 0;
 	// 	nanosleep(&sleep_time, NULL);
 	// }
-	out_file.close();
+//	out_file.close();
 }

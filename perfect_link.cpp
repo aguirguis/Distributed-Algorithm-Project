@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <iostream>
 #include "perfect_link.h"
 using namespace std;
 
@@ -18,8 +19,8 @@ void perfect_link::send(Message message, int to) {
     // prepare the receiver socket address
     struct sockaddr_in addr_receiver;
 	addr_receiver.sin_family = AF_INET;
-	addr_receiver.sin_port = htons(processes[to].port);
-	addr_receiver.sin_addr.s_addr = inet_addr(processes[to].ip.c_str());
+	addr_receiver.sin_port = htons(processes[to - 1].port);
+	addr_receiver.sin_addr.s_addr = inet_addr(processes[to - 1].ip.c_str());
 	socklen_t addr_receiver_size = sizeof(addr_receiver);
 
     // send the message (keep re-sending till an ACK is received)
@@ -28,7 +29,7 @@ void perfect_link::send(Message message, int to) {
     while(send_again){
         if(!sendto(send_sock, (const char *)&message, sizeof(message), 0, (const struct sockaddr *) &addr_receiver, addr_receiver_size))
         {
-            printf("Sending message throught the socket was not successful\n");
+            printf("Sending message through the socket was not successful\n");
         }
 
         //Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
@@ -42,7 +43,7 @@ void perfect_link::send(Message message, int to) {
         char* buf[3];
         if (recVal == 0)
         {
-            printf("timeout, should send again!!\n");
+            printf("timeout, should send again to process %d!!\n", to);
             send_again = true;
         }
         else
@@ -61,26 +62,29 @@ void perfect_link::send(Message message, int to) {
                         when message is received
 */
 void perfect_link::deliver(deliver_callback *bclass) {
-    struct sockaddr_in addr_sender;
-    socklen_t addr_sender_size = sizeof(addr_sender);
-    struct Message message;
-    int r = recvfrom(recv_sock, &message, sizeof(message), 0, ( struct sockaddr *) &addr_sender, &addr_sender_size);
-    printf("recv something? %d\n", r);
+	cout << "PL: waiting to deliver some messages " << endl;
+	while(1){	//always true, always waiting for messages to deliver
+		struct sockaddr_in addr_sender;
+		socklen_t addr_sender_size = sizeof(addr_sender);
+		struct Message message;
+		int r = recvfrom(recv_sock, &message, sizeof(message), 0, ( struct sockaddr *) &addr_sender, &addr_sender_size);
+		printf("PL: recv something? %d\n", r);
 
-    // check if message is already delivered
-    const bool is_delivered = delivered.find(message) != delivered.end();
+		// check if message is already delivered
+		const bool is_delivered = delivered.find(message) != delivered.end();
 
-    if(!is_delivered) {
-        // deliver the received message
-        bclass -> deliver(message);
+		if(!is_delivered) {
+			// deliver the received message
+			assert (bclass != NULL);
+			bclass -> deliver(message);
 
-        // add to delivered
-        delivered.insert(message);
-
-        // send an ACK
-        const char * ackstr = "Ack";
-        int ack = 0;
-        ack = sendto(send_sock, (const char *)ackstr, strlen(ackstr), 0, (const struct sockaddr *) &addr_sender, addr_sender_size);
-        printf("Ack sent? %d\n", ack);
-    }
+			// add to delivered
+			delivered.insert(message);
+		}
+		// send an ACK
+		const char * ackstr = "Ack";
+		int ack = 0;
+		ack = sendto(send_sock, (const char *)ackstr, strlen(ackstr), 0, (const struct sockaddr *) &addr_sender, addr_sender_size);
+		printf("Ack sent? %d\n", ack);
+	}
 }

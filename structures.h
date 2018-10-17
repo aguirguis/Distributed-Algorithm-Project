@@ -1,5 +1,6 @@
 #include <string>
 #include <fstream>
+#include <iostream>
 
 #ifndef STRUCTURES_H_
 #define STRUCTURES_H_
@@ -51,11 +52,12 @@ extern ofstream out_file;
 
 //This function writes the logs received to the log file
 static void write_log(){
+	cout << "At process " << my_process_id << " writing output to file... number of lines in log: " << log_pointer << endl;
 	for(int i = 0; i < log_pointer; i++) {
 		if(messages_log[i].message_type == 'b')
-			out_file << "b " << messages_log[i].seq_nr << "\n";
+			out_file << "b " << messages_log[i].seq_nr << endl;
 		else
-			out_file << "d " << messages_log[i].sender << " " << messages_log[i].seq_nr << "\n";
+			out_file << "d " << messages_log[i].sender << " " << messages_log[i].seq_nr << endl;
 	}
 	log_pointer = 0;	//return the point to the beginning
 }
