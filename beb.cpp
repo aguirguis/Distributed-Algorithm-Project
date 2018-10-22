@@ -22,11 +22,10 @@ void beb::init(deliver_callback* bclass){
 }
 
 void beb::bebBroadcast(Message message) {
- message.seq_no = 0;
- message.sender = my_process_id;
  message.initial_sender = my_process_id;
  LogMessage lm;
  lm.message_type='b';
+ lm.seq_nr = message.seq_no;
  lm.sender = my_process_id;
  messages_log[log_pointer] = lm;
  log_pointer++;
