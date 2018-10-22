@@ -22,7 +22,7 @@ class beb: public deliver_callback { // @suppress("Class has a virtual method an
 		void init(deliver_callback* bclass);
 		//If some callback is passed, it will be called on receive..otherwise, beb callback will be called
         void bebBroadcast(Message message);
-        void beb_deliver(Message message, int from);
+        void beb_deliver(Message message);
         void deliver(Message message);
 };
 
