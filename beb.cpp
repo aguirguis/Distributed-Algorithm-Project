@@ -16,6 +16,7 @@ void beb::init(deliver_callback* bclass){
 	 //start receiving thread
 	 if(bclass == NULL){
 		 bclass = this;
+		 this->bclass = this;
 		 cout << "Use bebBroadcast to deliver" << endl;
 	 }
 
