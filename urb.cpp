@@ -60,7 +60,7 @@ void urb::urb_deliver(Message message, int from) {
             it++;
         }
     }
-    printf("Process %d not in pending? %d\n", my_process_id, notInPending);
+    printf("============= Process %d Retransmit message %d %d ? %d\n", my_process_id, message.initial_sender, message.seq_no, notInPending);
     if(notInPending) {
         pending.insert(message);
         bbb.bebBroadcast(message);

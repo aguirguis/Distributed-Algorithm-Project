@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 	//test_perfect_link();
 
 	//test bebBroadcast
-	beb bb = test_bebBroadcast();
+	// beb bb = test_bebBroadcast();
 
 	//test URB
 	// urb ur;
@@ -144,23 +144,22 @@ int main(int argc, char** argv) {
 
 	 //broadcast messages
 	 printf("Broadcasting messages at process %d.\n", my_process_id);
-	 	// for(int i = 0; i < 5; i++) {
-		// 	Message m;
-		// 	fb.frb_broadcast(m);
-		// 	sleep(10);
-		// }
-		// fb.beb_instance -> recv.join();
+	 	for(int i = 0; i < 5; i++) {
+			Message m;
+			fb.frb_broadcast(m);
+		}
+		fb.beb_instance -> recv.join();
 
-		Message m1;
-		m1.seq_no = 0;
-		m1.initial_sender = my_process_id;
-		bb.bebBroadcast(m1);
+		// Message m1;
+		// m1.seq_no = 0;
+		// m1.initial_sender = my_process_id;
+		// bb.bebBroadcast(m1);
 		// sleep(10);
 		// Message m2;
 		// m2.seq_no = 1;
 		// m2.initial_sender = my_process_id;
 		// bb.bebBroadcast(m2);
-		bb.recv.join();
+		// bb.recv.join();
 		// Message m;
 		// m.seq_no = 0;
 		// m.initial_sender = my_process_id;
