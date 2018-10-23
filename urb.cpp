@@ -14,6 +14,7 @@
 void urb::init(){
 	bbb.init(this);
 }
+
 void urb::urbBroadcast(Message message) {
     // add itself as the immediate sender
     // and put into the pending set
@@ -22,6 +23,7 @@ void urb::urbBroadcast(Message message) {
     // since we did insert something in pending here,
     // we should probably check the condition
     // upon exists
+    /*
     while(it != pending.end()) {
         if(candeliver(*it) && (delivered.find(*it) == delivered.end())) {
             delivered.insert(*it);
@@ -29,11 +31,12 @@ void urb::urbBroadcast(Message message) {
         }
         it++;
     }
+    */
     // Broadcast
     bbb.bebBroadcast(message);
 }
 
-void urb::urb_deliver(Message message, int from, set<int, greater <int> > ack[]) {
+void urb::urb_deliver(Message message, int from) {
     // add process to acknowledgement array
     // here, we identify messages by their initial sender
     // this may not be entirely correct,
@@ -79,8 +82,10 @@ void urb::urb_deliver(Message message, int from, set<int, greater <int> > ack[])
 }
 
 void urb::deliver(Message message) {
-    
-    urb_deliver(message, message.sender, ack);
+
+	printf("Before urb deliver at some process \n");
+    urb_deliver(message, message.sender);
+    printf("After urb at the same process \n");
     
     // upon exists
     while(it != pending.end()) {
@@ -90,6 +95,7 @@ void urb::deliver(Message message) {
         }
         it++;
     }
+    printf("end of deliver at URB..\n");
 }
 
 

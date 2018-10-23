@@ -7,6 +7,7 @@
 void beb::init(deliver_callback* bclass){
 	pl = new perfect_link*[nb_of_processes];
 	links = new std::thread[nb_of_processes];
+	this->bclass = bclass;
 
 	for(int i=0;i<nb_of_processes;i++)
 		pl[i] = new perfect_link();
@@ -37,7 +38,7 @@ void beb::bebBroadcast(Message message) {
 	 if(processes[i].id != my_process_id){
 		 links[i] = std::thread(&perfect_link::send, pl[i], std::move(message), std::move(processes[i].id));
 	 }else	//deliver it to myself
-		 deliver(message);
+		 bclass->deliver(message);
 }
 
 void beb::beb_deliver(Message message) {

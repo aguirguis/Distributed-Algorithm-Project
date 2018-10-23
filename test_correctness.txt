@@ -13,15 +13,15 @@ time_to_finish=3
 init_time=2
 
 #configure lossy network simulation
-sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25% 50%
+#sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25% 50%
 
 rm membership
 echo "5
-1 127.0.0.1 21006
-2 127.0.0.1 21007
-3 127.0.0.1 21008
-4 127.0.0.1 21009
-5 127.0.0.1 21010" >> membership
+1 127.0.0.1 31006
+2 127.0.0.1 31007
+3 127.0.0.1 31008
+4 127.0.0.1 31009
+5 127.0.0.1 31010" >> membership
 
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`
@@ -35,13 +35,13 @@ sleep $init_time
 
 #do some nasty stuff like process crashes and delays
 #example:
-kill -STOP "${da_proc_id[1]}" #pause process 1
-sleep 0.5
-kill -STOP "${da_proc_id[3]}" #pause process 3
-sleep 1
-kill -TERM "${da_proc_id[2]}" #crash process 2
-da_proc_id[2]=""
-kill -CONT "${da_proc_id[3]}" #resume process 3
+#kill -STOP "${da_proc_id[1]}" #pause process 1
+#sleep 0.5
+#kill -STOP "${da_proc_id[3]}" #pause process 3
+#sleep 1
+#kill -TERM "${da_proc_id[2]}" #crash process 2
+#da_proc_id[2]=""
+#kill -CONT "${da_proc_id[3]}" #resume process 3
 
 #start broadcasting
 for i in `seq 1 5`
@@ -53,9 +53,9 @@ done
 
 #do some more nasty stuff
 #example:
-kill -TERM "${da_proc_id[4]}" #crash process 4
-da_proc_id[4]=""
-kill -CONT "${da_proc_id[1]}" #resume process 1
+#kill -TERM "${da_proc_id[4]}" #crash process 4
+#da_proc_id[4]=""
+#kill -CONT "${da_proc_id[1]}" #resume process 1
 
 #leave some time for the correct processes to broadcast all messages
 sleep $time_to_finish

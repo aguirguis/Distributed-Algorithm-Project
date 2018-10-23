@@ -24,8 +24,8 @@ private:
     set<Message, MessageComp> pending;
     set<Message, MessageComp>::iterator it = pending.begin();
     int nMessages = 0;
-    Message messageInd[0];
-    set<int, greater <int> > ack[0];
+    Message messageInd[MAX_PROCESSES_NUM];
+    set<int, greater <int> > ack[MAX_PROCESSES_NUM];
     //Process self;
     
 public:
@@ -34,7 +34,7 @@ public:
     void init();
     void urbBroadcast(Message message);
     void deliver(Message message);
-    void urb_deliver(Message message, int from, set<int, greater <int> > ack[]);
+    void urb_deliver(Message message, int from);
 };
 
 #endif /* urb_hpp */
