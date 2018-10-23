@@ -76,11 +76,24 @@ void urb::deliver(Message message) {
     // upon exists
     it = pending.begin();
     while(it != pending.end()) {
+        if(candeliver(*it)) {
+            jt = delivered.begin();
+            while(jt != delivered.end()) {
+                if((*it).seq_no == (*jt).seq_no && (*it).initial_sender == (*jt).initial_sender) {
+                    delivered.insert(*it);
+                    bbb.beb_deliver(*it);
+                }
+            }
+        }
+        it++;
+        /*
         if(candeliver(*it) && (delivered.find(*it) == delivered.end())) {
             delivered.insert(*it);
             bbb.beb_deliver(*it);
+
         }
         it++;
+        */
     }
     printf("Process %d end of deliver at URB..\n", my_process_id);
 }
@@ -89,8 +102,9 @@ void urb::deliver(Message message) {
 
 bool urb::candeliver(Message message) {
     // calculate the number of acks for this message
-    int nAcks = ack[message.initial_sender][message.seq_no].size();
+    int nAcks = (ack[message.initial_sender][message.seq_no]).size();
     // return statement whether majority or not
+    printf("????nAcks = %d \n", nAcks);
     return nAcks > nb_of_processes/2;
 }
 
