@@ -122,8 +122,12 @@ int main(int argc, char** argv) {
 	// test perfect links
 	//test_perfect_link();
 
-	// test bebBroadcast
+	//test bebBroadcast
 	beb bb = test_bebBroadcast();
+
+	//test URB
+	// urb ur;
+	// ur.init();
 
 	// test frb_broadcast
 	frb fb;
@@ -146,17 +150,25 @@ int main(int argc, char** argv) {
 		// 	sleep(10);
 		// }
 		// fb.beb_instance -> recv.join();
+
 		Message m1;
 		m1.seq_no = 0;
 		m1.initial_sender = my_process_id;
 		bb.bebBroadcast(m1);
-		sleep(10);
-		Message m2;
-		m2.seq_no = 1;
-		m2.initial_sender = my_process_id;
-		bb.bebBroadcast(m2);
+		// sleep(10);
+		// Message m2;
+		// m2.seq_no = 1;
+		// m2.initial_sender = my_process_id;
+		// bb.bebBroadcast(m2);
 		bb.recv.join();
-	//
+		// Message m;
+		// m.seq_no = 0;
+		// m.initial_sender = my_process_id;
+		// //bb.bebBroadcast(m);
+		// //bb.recv.join();
+		// ur.urbBroadcast(m);
+		// ur.bbb.recv.join();
+
 	 //wait until stopped
 	 while(1) {
 	 	struct timespec sleep_time;

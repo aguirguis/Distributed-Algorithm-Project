@@ -7,6 +7,7 @@
 
 #include "perfect_link.h"
 #include <thread>
+#include <vector>
 
 #ifndef BEB_H_
 #define BEB_H_
@@ -14,10 +15,11 @@
 class beb: public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
 
     public:
-		std::thread* links;
+		vector<std::thread> links;
 		perfect_link** pl;
 		perfect_link* recv_link;
 		std::thread recv;
+		deliver_callback* bclass;
 
 		void init(deliver_callback* bclass);
 		//If some callback is passed, it will be called on receive..otherwise, beb callback will be called

@@ -6,7 +6,8 @@
 //If some callback is passed, it will be called on receive..otherwise, beb callback will be called
 void beb::init(deliver_callback* bclass){
 	pl = new perfect_link*[nb_of_processes];
-	links = new std::thread[nb_of_processes];
+//	links = new std::thread[nb_of_processes];
+	this->bclass = bclass;
 
 	for(int i=0;i<nb_of_processes;i++)
 		pl[i] = new perfect_link();
@@ -28,16 +29,15 @@ void beb::bebBroadcast(Message message) {
  lm.sender = my_process_id;
  messages_log[log_pointer] = lm;
  log_pointer++;
- cout << "BebBroadcast from this process" << endl;
  if(log_pointer == MAX_LOG_FILE)
 	 write_log();
 
  //send this message to all processes
  for(int i=0;i<nb_of_processes;i++)
 	 if(processes[i].id != my_process_id){
-		 links[i] = std::thread(&perfect_link::send, pl[i], std::move(message), std::move(processes[i].id));
+		 links.push_back(std::thread(&perfect_link::send, pl[i], std::move(message), std::move(processes[i].id)));
 	 }else	//deliver it to myself
-		 deliver(message);
+		 bclass->deliver(message);
 }
 
 void beb::beb_deliver(Message message) {
