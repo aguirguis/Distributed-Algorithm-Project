@@ -6,6 +6,8 @@
  */
 
 #include <set>
+#include <string.h>
+#include "assert.h"
 #include "structures.h"
 #ifndef PERFECT_LINK_H_
 #define PERFECT_LINK_H_

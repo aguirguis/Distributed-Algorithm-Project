@@ -22,11 +22,9 @@ void beb::init(deliver_callback* bclass){
 }
 
 void beb::bebBroadcast(Message message) {
- message.seq_no = 0;
- message.sender = my_process_id;
- message.initial_sender = my_process_id;
  LogMessage lm;
  lm.message_type='b';
+ lm.seq_nr = message.seq_no;
  lm.sender = my_process_id;
  messages_log[log_pointer] = lm;
  log_pointer++;
@@ -42,18 +40,19 @@ void beb::bebBroadcast(Message message) {
 		 deliver(message);
 }
 
-void beb::beb_deliver(Message message, int from) {
+void beb::beb_deliver(Message message) {
+	int from = message.initial_sender;
 	cout << "BEB deliver: received " << message.seq_no << " from " << from << endl;
-	 LogMessage lm;
-	 lm.message_type='d';
-	 lm.sender = message.initial_sender;
-	 lm.seq_nr = message.seq_no;
-	 messages_log[log_pointer] = lm;
-	 log_pointer++;
-	 if(log_pointer == MAX_LOG_FILE)
-		 write_log();
+	LogMessage lm;
+	lm.message_type='d';
+	lm.sender = message.initial_sender;
+	lm.seq_nr = message.seq_no;
+	messages_log[log_pointer] = lm;
+	log_pointer++;
+	if(log_pointer == MAX_LOG_FILE)
+		write_log();
 }
 
 void beb::deliver(Message message) {
-	beb_deliver(message, message.sender);
+	beb_deliver(message);
 }

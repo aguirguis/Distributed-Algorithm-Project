@@ -26,7 +26,7 @@ static void stop(int signum) {
 	signal(SIGINT, SIG_DFL);
 
 	//immediately stop network packet processing
-	printf("Immediately stopping network packet processing.\n");
+	printf("Immediately stopping network packet processing at process %d.\n", my_process_id);
 
 	//write/flush output file if necessary
 	printf("Writing output....number of lines in log: %d \n", log_pointer);
@@ -59,14 +59,11 @@ void test_perfect_link() {
     }
 }
 
-void test_bebBroadcast(){
+beb test_bebBroadcast(){
 	beb bb;
 	bb.init(0);
-	sleep(10);
-	Message m;
-	m.seq_no = 0;
-	bb.bebBroadcast(m);
-	bb.recv.join();
+//	sleep(10);
+	return bb;
 }
 
 int main(int argc, char** argv) {
@@ -79,9 +76,9 @@ int main(int argc, char** argv) {
 
 	//parse arguments, including membership
 	//initialize application
-	printf("Initializing.\n");
 	my_process_id = atoi(argv[1]);
 	ifstream membership (argv[2]);
+	printf("Initializing at process %d.\n", my_process_id);
 	if(membership.is_open()) {
 		membership >> nb_of_processes;
 		for(int i = 0; i < nb_of_processes; i++) {
@@ -126,27 +123,31 @@ int main(int argc, char** argv) {
 	//test_perfect_link();
 
 	//test bebBroadcast
-	test_bebBroadcast();
+	beb bb = test_bebBroadcast();
 
 	//  //wait until start signal
-	// while(wait_for_start) {
-	// 	struct timespec sleep_time;
-	// 	sleep_time.tv_sec = 0;
-	// 	sleep_time.tv_nsec = 1000;
-	// 	nanosleep(&sleep_time, NULL);
-	// }
+	 while(wait_for_start) {
+	 	struct timespec sleep_time;
+	 	sleep_time.tv_sec = 0;
+	 	sleep_time.tv_nsec = 1000;
+	 	nanosleep(&sleep_time, NULL);
+	 }
+
+
+	 //broadcast messages
+	 printf("Broadcasting messages at process %d.\n", my_process_id);
+		Message m;
+		m.seq_no = 0;
+		m.initial_sender = my_process_id;
+		bb.bebBroadcast(m);
+		bb.recv.join();
 	//
-	//
-	// //broadcast messages
-	// printf("Broadcasting messages.\n");
-	//
-	//
-	// //wait until stopped
-	// while(1) {
-	// 	struct timespec sleep_time;
-	// 	sleep_time.tv_sec = 1;
-	// 	sleep_time.tv_nsec = 0;
-	// 	nanosleep(&sleep_time, NULL);
-	// }
-//	out_file.close();
+	 //wait until stopped
+	 while(1) {
+	 	struct timespec sleep_time;
+	 	sleep_time.tv_sec = 1;
+	 	sleep_time.tv_nsec = 0;
+	 	nanosleep(&sleep_time, NULL);
+	 }
+	out_file.close();
 }
