@@ -19,6 +19,7 @@ void urb::urbBroadcast(Message message) {
     // add itself as the immediate sender
     // and put into the pending set
     message.sender = my_process_id;
+    message.initial_sender = my_process_id;
     pending.insert(message);
     // since we did insert something in pending here,
     // we should probably check the condition
@@ -42,15 +43,16 @@ void urb::urb_deliver(Message message, int from) {
     // this may not be entirely correct,
     // since the initial sender could send several messages.
     // however, we leave this for another level of abstraction
-    ack.insert(from);
+    ack[message.initial_sender][message.seq_no].insert(from);
     // check if pending
     // here again, it's not entirely clear
     // how to identify messages.
     // this is wrong?!
     bool notInPending = true;
+    it = pending.begin();
     while(it != pending.end()) {
         if((*it).initial_sender == message.initial_sender
-           /*&& (*it).seq_no == message.seq_no*/) {
+           && (*it).seq_no == message.seq_no) {
             notInPending = false;
             break;
         }
@@ -58,6 +60,7 @@ void urb::urb_deliver(Message message, int from) {
             it++;
         }
     }
+    printf("Process %d not in pending? %d\n", my_process_id, notInPending);
     if(notInPending) {
         pending.insert(message);
         bbb.bebBroadcast(message);
@@ -66,11 +69,12 @@ void urb::urb_deliver(Message message, int from) {
 
 void urb::deliver(Message message) {
 
-	printf("Before urb deliver at some process \n");
+	printf("Process %d Before urb deliver at some process \n", my_process_id);
     urb_deliver(message, message.sender);
-    printf("After urb at the same process \n");
+    printf("Process %d After urb at the same process \n", my_process_id);
     
     // upon exists
+    it = pending.begin();
     while(it != pending.end()) {
         if(candeliver(*it) && (delivered.find(*it) == delivered.end())) {
             delivered.insert(*it);
@@ -78,14 +82,14 @@ void urb::deliver(Message message) {
         }
         it++;
     }
-    printf("end of deliver at URB..\n");
+    printf("Process %d end of deliver at URB..\n", my_process_id);
 }
 
 
 
 bool urb::candeliver(Message message) {
     // calculate the number of acks for this message
-    int nAcks = ack.size();
+    int nAcks = ack[message.initial_sender][message.seq_no].size();
     // return statement whether majority or not
     return nAcks > nb_of_processes/2;
 }

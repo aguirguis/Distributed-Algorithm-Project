@@ -22,9 +22,8 @@ class urb: public deliver_callback { // @suppress("Class has a virtual method an
 private:
     set<Message, MessageComp> delivered;
     set<Message, MessageComp> pending;
-    set<Message, MessageComp>::iterator it = pending.begin();
-    int nMessages = 0;
-    set<int, greater <int> > ack;
+    set<Message, MessageComp>::iterator it;
+    set<int, greater <int> > ack[MAX_PROCESSES_NUM][MAX_MESSAGE_NUM];
     //Process self;
     
 public:

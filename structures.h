@@ -47,6 +47,7 @@ struct ProcessComp
 };
 
 #define MAX_PROCESSES_NUM 10
+#define MAX_MESSAGE_NUM 10000
 #define MSG_LEN 64
 #define MAX_LOG_FILE 100	//let's say after each 100 message, I will write to a file
 
