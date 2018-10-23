@@ -8,7 +8,7 @@
 #include <fstream>
 #include <thread>         // std::thread
 #include <unistd.h>			//sleep
-#include "beb.h"
+#include "frb.h"
 
 using namespace std;
 
@@ -122,8 +122,12 @@ int main(int argc, char** argv) {
 	// test perfect links
 	//test_perfect_link();
 
-	//test bebBroadcast
+	// test bebBroadcast
 	beb bb = test_bebBroadcast();
+
+	// test frb_broadcast
+	frb fb;
+	fb.init(new pl_deliver_callback());
 
 	//  //wait until start signal
 	 while(wait_for_start) {
@@ -136,10 +140,21 @@ int main(int argc, char** argv) {
 
 	 //broadcast messages
 	 printf("Broadcasting messages at process %d.\n", my_process_id);
-		Message m;
-		m.seq_no = 0;
-		m.initial_sender = my_process_id;
-		bb.bebBroadcast(m);
+	 	// for(int i = 0; i < 5; i++) {
+		// 	Message m;
+		// 	fb.frb_broadcast(m);
+		// 	sleep(10);
+		// }
+		// fb.beb_instance -> recv.join();
+		Message m1;
+		m1.seq_no = 0;
+		m1.initial_sender = my_process_id;
+		bb.bebBroadcast(m1);
+		sleep(10);
+		Message m2;
+		m2.seq_no = 1;
+		m2.initial_sender = my_process_id;
+		bb.bebBroadcast(m2);
 		bb.recv.join();
 	//
 	 //wait until stopped
