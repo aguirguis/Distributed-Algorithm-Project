@@ -35,6 +35,17 @@ struct Process {
 	int port;
 };
 
+// Process comparator / Functor
+// Compare objects with id number.
+// Should I compare wrt to something else?
+struct ProcessComp
+{
+    bool operator()(const Process& prcs1, const Process& prcs2) const
+    {
+        return (prcs1.id < prcs2.id) || ((!(prcs2.id < prcs1.id)));
+    }
+};
+
 #define MAX_PROCESSES_NUM 10
 #define MSG_LEN 64
 #define MAX_LOG_FILE 100	//let's say after each 100 message, I will write to a file
