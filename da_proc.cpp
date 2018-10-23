@@ -8,7 +8,7 @@
 #include <fstream>
 #include <thread>         // std::thread
 #include <unistd.h>			//sleep
-#include "beb.h"
+#include "urb.hpp"
 
 using namespace std;
 
@@ -123,7 +123,11 @@ int main(int argc, char** argv) {
 	//test_perfect_link();
 
 	//test bebBroadcast
-	beb bb = test_bebBroadcast();
+	//beb bb = test_bebBroadcast();
+
+	//test URB
+	urb ur;
+	ur.init();
 
 	//  //wait until start signal
 	 while(wait_for_start) {
@@ -139,8 +143,10 @@ int main(int argc, char** argv) {
 		Message m;
 		m.seq_no = 0;
 		m.initial_sender = my_process_id;
-		bb.bebBroadcast(m);
-		bb.recv.join();
+		//bb.bebBroadcast(m);
+		//bb.recv.join();
+		ur.urbBroadcast(m);
+		ur.bbb.recv.join();
 	//
 	 //wait until stopped
 	 while(1) {

@@ -11,8 +11,10 @@
 #include "urb.hpp"
 //#include "beb.h"
 
+void urb::init(){
+	bbb.init(this);
+}
 void urb::urbBroadcast(Message message) {
-    bbb.init(this);
     // add itself as the immediate sender
     // and put into the pending set
     message.sender = my_process_id;
@@ -84,7 +86,7 @@ void urb::deliver(Message message) {
     while(it != pending.end()) {
         if(candeliver(*it) && (delivered.find(*it) == delivered.end())) {
             delivered.insert(*it);
-            bbb.beb_deliver(*it, int ((*it).sender));
+            bbb.beb_deliver(*it);
         }
         it++;
     }

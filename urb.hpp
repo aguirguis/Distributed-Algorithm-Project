@@ -18,7 +18,7 @@
 
 using namespace std;
 
-class urb: public deliver_callback {
+class urb: public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
 private:
     set<Message, MessageComp> delivered;
     set<Message, MessageComp> pending;
@@ -26,11 +26,12 @@ private:
     int nMessages = 0;
     Message messageInd[0];
     set<int, greater <int> > ack[0];
-    beb bbb;
     //Process self;
     
 public:
+    beb bbb;
     bool candeliver(Message message);
+    void init();
     void urbBroadcast(Message message);
     void deliver(Message message);
     void urb_deliver(Message message, int from, set<int, greater <int> > ack[]);
