@@ -24,8 +24,7 @@ private:
     set<Message, MessageComp> pending;
     set<Message, MessageComp>::iterator it = pending.begin();
     int nMessages = 0;
-    Message messageInd[MAX_PROCESSES_NUM];
-    set<int, greater <int> > ack[MAX_PROCESSES_NUM];
+    set<int, greater <int> > ack;
     //Process self;
     
 public:

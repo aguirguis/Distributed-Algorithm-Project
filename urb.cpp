@@ -42,24 +42,7 @@ void urb::urb_deliver(Message message, int from) {
     // this may not be entirely correct,
     // since the initial sender could send several messages.
     // however, we leave this for another level of abstraction
-    int i = 0;
-    while(true) {
-        if(messageInd[i].initial_sender == message.initial_sender) {
-            ack[i].insert(from);
-            i = 0;
-            break;
-        }
-        else if(i<=nMessages) {
-            i++;
-        }
-        else {
-            messageInd[i] = message;
-            nMessages++;
-            ack[i].insert(from);
-            i = 0;
-            break;
-        }
-    }
+    ack.insert(from);
     // check if pending
     // here again, it's not entirely clear
     // how to identify messages.
