@@ -50,7 +50,8 @@ void test_perfect_link() {
         Message message;
         message.seq_no = message.sender = message.initial_sender = 1;
         perfect_link* pl = new perfect_link();
-        pl -> send(message, 2);
+        pl->messages.push(message);
+        pl -> send(2);
     }
     else {
         pl_deliver_callback* callback = new pl_deliver_callback();
@@ -108,22 +109,26 @@ int main(int argc, char** argv) {
 	}
 
 	// create the send socket that the process will be sending by
-	send_sock = socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in send_addr;
-	memset(&send_addr, 0, sizeof(send_addr));
-	socklen_t send_addr_size = sizeof(send_addr);
-	send_addr.sin_family = AF_INET;
-	send_addr.sin_port = htons(my_port + 1000);
-	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-	if(bind(send_sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
-		printf("Fail to bind the sending socket of process %d \n", my_process_id);
-	}
+	send_sock = new int[nb_of_processes];
+	for(int i = 0; i < nb_of_processes; i++) {
+		int sock = socket(AF_INET, SOCK_DGRAM, 0);
+		struct sockaddr_in send_addr;
+		memset(&send_addr, 0, sizeof(send_addr));
+		socklen_t send_addr_size = sizeof(send_addr);
+		send_addr.sin_family = AF_INET;
+		send_addr.sin_port = htons(my_port + 1000+i);
+		send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
+		if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
+			printf("Fail to bind the sending socket of process %d \n", my_process_id);
+		}
+		send_sock[i] = sock;
+	}//end for
 
 	// test perfect links
 	//test_perfect_link();
 
 	//test bebBroadcast
-	beb bb = test_bebBroadcast();
+//	beb bb = test_bebBroadcast();
 
 	//test URB
 	urb ur;

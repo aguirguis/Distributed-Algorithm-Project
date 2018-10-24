@@ -7,6 +7,7 @@
 
 #include <set>
 #include <string.h>
+#include <queue>
 #include "assert.h"
 #include "structures.h"
 #ifndef PERFECT_LINK_H_
@@ -19,7 +20,8 @@ class perfect_link {
         set<Message, MessageComp> delivered;
 
     public:
-        void send(Message message, int to);
+        std::queue<Message> messages;
+        void send(int to);
         void deliver(deliver_callback *bclass);
 };
 

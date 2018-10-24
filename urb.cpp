@@ -38,6 +38,7 @@ void urb::urbBroadcast(Message message) {
 }
 
 void urb::urb_deliver(Message message, int from) {
+//	printf(" MARKER:::    At process %d, delivering a message %d %d %d\n", my_process_id, message.initial_sender, message.seq_no, message.sender);
     // add process to acknowledgement array
     // here, we identify messages by their initial sender
     // this may not be entirely correct,
@@ -51,8 +52,7 @@ void urb::urb_deliver(Message message, int from) {
     bool notInPending = true;
     it = pending.begin();
     while(it != pending.end()) {
-        if((*it).initial_sender == message.initial_sender
-           && (*it).seq_no == message.seq_no) {
+        if(((*it).initial_sender == message.initial_sender) && ((*it).seq_no == message.seq_no)) {
             notInPending = false;
             break;
         }
@@ -60,7 +60,6 @@ void urb::urb_deliver(Message message, int from) {
             it++;
         }
     }
-    printf("============= Process %d Retransmit message %d %d ? %d\n", my_process_id, message.initial_sender, message.seq_no, notInPending);
     if(notInPending) {
         pending.insert(message);
         bbb.bebBroadcast(message);
@@ -69,20 +68,17 @@ void urb::urb_deliver(Message message, int from) {
 
 void urb::deliver(Message message) {
 
-	printf("Process %d Before urb deliver at some process \n", my_process_id);
     urb_deliver(message, message.sender);
-    printf("Process %d After urb at the same process \n", my_process_id);
     
     // upon exists
     it = pending.begin();
     while(it != pending.end()) {
-        if(candeliver(*it) && (delivered.find(*it) == delivered.end())) {
+        if(candeliver(*it) && not_in_deliver(*it)) {
             delivered.insert(*it);
             bbb.beb_deliver(*it);
         }
         it++;
     }
-    printf("Process %d end of deliver at URB..\n", my_process_id);
 }
 
 
@@ -93,7 +89,11 @@ bool urb::candeliver(Message message) {
     // return statement whether majority or not
     return nAcks > nb_of_processes/2;
 }
-
-
-
+bool urb::not_in_deliver(Message message){
+	for(Message m: delivered){
+		if(m.initial_sender == message.initial_sender && m.seq_no == message.seq_no)
+			return false;
+	}
+	return true;
+}
 
