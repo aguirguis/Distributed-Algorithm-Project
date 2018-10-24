@@ -1,4 +1,4 @@
-#include "beb.h" // TODO: change to urb.h
+#include "urb.hpp" 
 #include <list>
 
 #ifndef FRB_H_
@@ -10,7 +10,7 @@ class frb : public deliver_callback { // @suppress("Class has a virtual method a
 		int lsn;
         std::list<Message>* pending;
 		int* next;
-        beb* beb_instance;// TODO: change to URB instance
+        urb urb_instance;
         deliver_callback* callback;
 
 		void init(deliver_callback* callback);

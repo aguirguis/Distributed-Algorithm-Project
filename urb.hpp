@@ -26,13 +26,14 @@ private:
     set<Message, MessageComp> pending;
     set<Message, MessageComp>::iterator it;
     set<int, greater <int> > ack[MAX_PROCESSES_NUM][MAX_MESSAGE_NUM];
+    deliver_callback* frb_callback;
     //Process self;
-    
+
 public:
     beb bbb;
     bool candeliver(Message message);
     bool not_in_deliver(Message message);
-    void init();
+    void init(deliver_callback* callback);
     void urbBroadcast(Message message);
     void deliver(Message message);
     void urb_deliver(Message message, int from);

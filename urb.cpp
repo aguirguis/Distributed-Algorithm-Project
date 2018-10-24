@@ -11,15 +11,16 @@
 #include "urb.hpp"
 //#include "beb.h"
 
-void urb::init(){
+void urb::init(deliver_callback* callback){
 	bbb.init(this);
+	frb_callback = callback;
 }
 
 void urb::urbBroadcast(Message message) {
     // add itself as the immediate sender
     // and put into the pending set
     message.sender = my_process_id;
-    message.initial_sender = my_process_id;
+    // message.initial_sender = my_process_id;
     pending.insert(message);
     // since we did insert something in pending here,
     // we should probably check the condition
@@ -69,13 +70,14 @@ void urb::urb_deliver(Message message, int from) {
 void urb::deliver(Message message) {
 
     urb_deliver(message, message.sender);
-    
+
     // upon exists
     it = pending.begin();
     while(it != pending.end()) {
         if(candeliver(*it) && not_in_deliver(*it)) {
             delivered.insert(*it);
             bbb.beb_deliver(*it);
+			if (frb_callback != NULL) frb_callback -> deliver(*it);
         }
         it++;
     }
@@ -96,4 +98,3 @@ bool urb::not_in_deliver(Message message){
 	}
 	return true;
 }
-

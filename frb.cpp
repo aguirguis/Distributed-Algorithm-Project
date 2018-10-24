@@ -7,8 +7,7 @@ void frb::init(deliver_callback* callback) {
     std::fill_n(next, nb_of_processes, 1);
 
     this -> callback = callback;
-    beb_instance = new beb();
-    beb_instance -> init(this);
+    urb_instance.init(this);
 }
 
 void frb::frb_broadcast(Message message) {
@@ -17,14 +16,14 @@ void frb::frb_broadcast(Message message) {
     message.initial_sender = my_process_id;
 
     cout << my_process_id << " FRBBroadcast from this process" << endl;
-    // broadcast the message using urb (TODO: change beb_instance to urb_instance)
-    beb_instance -> bebBroadcast(message);
+    // broadcast the message using urb 
+    urb_instance.urbBroadcast(message);
 }
 
 void frb::frb_deliver(Message message) {
     int from = message.initial_sender;
     int from_index = from - 1;
-    cout << my_process_id << " FRB deliver: received " << message.seq_no << " from " << from << endl;
+    cout << my_process_id << " FRB deliver: received " << message.seq_no << " from " << from << " send throught " << message.sender << endl;
     pending[from_index].push_back(message);
 
     std::list<Message>::iterator message_iterator = pending[from_index].begin();
@@ -32,8 +31,6 @@ void frb::frb_deliver(Message message) {
         if(message_iterator -> seq_no <= next[from_index]) {
             if(message_iterator -> seq_no == next[from_index]) next[from_index]++;
 
-            // deliver the messages
-            beb_instance -> beb_deliver(*message_iterator); //(TODO: change beb_instance to urb_instance)
             // since FRB is in contact with the application layer then it should also execute the callback received from the application layer
             if (callback != NULL) callback -> deliver(*message_iterator);
 

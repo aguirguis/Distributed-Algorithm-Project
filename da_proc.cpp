@@ -8,8 +8,7 @@
 #include <fstream>
 #include <thread>         // std::thread
 #include <unistd.h>			//sleep
-//#include "frb.h"
-#include "urb.hpp"
+#include "frb.h"
 using namespace std;
 
 static int wait_for_start = 1;
@@ -40,7 +39,7 @@ static void stop(int signum) {
 class pl_deliver_callback : public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
     public:
         void deliver(Message message) {
-            printf("prcoess %d has received message of sequence number %d from process %d\n", my_process_id, message.seq_no, message.sender);
+            printf("prcoess %d has received message of sequence number %d from process %d\n", my_process_id, message.seq_no, message.initial_sender);
         }
 };
 
@@ -63,7 +62,6 @@ void test_perfect_link() {
 beb test_bebBroadcast(){
 	beb bb;
 	bb.init(0);
-//	sleep(10);
 	return bb;
 }
 
@@ -131,12 +129,12 @@ int main(int argc, char** argv) {
 //	beb bb = test_bebBroadcast();
 
 	//test URB
-	 urb ur;
-	 ur.init();
+	 // urb ur;
+	 // ur.init(0);
 
 	// test frb_broadcast
-//	frb fb;
-//	fb.init(new pl_deliver_callback());
+	frb fb;
+	fb.init(new pl_deliver_callback());
 
 	//  //wait until start signal
 	 while(wait_for_start) {
@@ -148,12 +146,12 @@ int main(int argc, char** argv) {
 
 
 	 //broadcast messages
-//	 printf("Broadcasting messages at process %d.\n", my_process_id);
-//	 	for(int i = 0; i < 5; i++) {
-//			Message m;
-//			fb.frb_broadcast(m);
-//		}
-//		fb.beb_instance -> recv.join();
+	 printf("Broadcasting messages at process %d.\n", my_process_id);
+	 	for(int i = 0; i < 5; i++) {
+			Message m;
+			fb.frb_broadcast(m);
+		}
+		fb.urb_instance.bbb.recv.join();
 
 		// Message m1;
 		// m1.seq_no = 0;
@@ -165,13 +163,19 @@ int main(int argc, char** argv) {
 		// m2.initial_sender = my_process_id;
 		// bb.bebBroadcast(m2);
 		// bb.recv.join();
-		 Message m;
-		 m.seq_no = 0;
-		 m.initial_sender = my_process_id;
-		// //bb.bebBroadcast(m);
-		// //bb.recv.join();
-		 ur.urbBroadcast(m);
-		 ur.bbb.recv.join();
+		//  Message m;
+		//  m.seq_no = 0;
+		//  m.initial_sender = my_process_id;
+		// // //bb.bebBroadcast(m);
+		// // //bb.recv.join();
+		//  ur.urbBroadcast(m);
+		//
+		//  Message m2;
+		//  m2.seq_no = 1;
+		//  m2.initial_sender = my_process_id;
+		//  ur.urbBroadcast(m2);
+		//
+		//  ur.bbb.recv.join();
 
 	 //wait until stopped
 	 while(1) {
