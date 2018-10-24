@@ -22,7 +22,7 @@ using namespace std;
 class urb: public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
 private:
     set<Message, MessageComp> delivered;
-    std::mutex del_m;
+    set<Message, MessageComp>::iterator jt;
     set<Message, MessageComp> pending;
     set<Message, MessageComp>::iterator it;
     set<int, greater <int> > ack[MAX_PROCESSES_NUM][MAX_MESSAGE_NUM];

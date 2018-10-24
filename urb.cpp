@@ -85,7 +85,7 @@ void urb::deliver(Message message) {
 
 bool urb::candeliver(Message message) {
     // calculate the number of acks for this message
-    int nAcks = ack[message.initial_sender][message.seq_no].size();
+    int nAcks = (ack[message.initial_sender][message.seq_no]).size();
     // return statement whether majority or not
     return nAcks > nb_of_processes/2;
 }

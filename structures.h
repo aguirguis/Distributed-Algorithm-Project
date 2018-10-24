@@ -19,7 +19,7 @@ struct MessageComp
 {
 	bool operator()(const Message& msg1, const Message& msg2) const
 	{
-		return (msg1.seq_no < msg2.seq_no) || ((!(msg2.seq_no < msg1.seq_no)) && (msg1.initial_sender < msg2.initial_sender));
+		return (msg1.seq_no != msg2.seq_no) || (msg1.initial_sender != msg2.initial_sender);
 	}
 };
 
