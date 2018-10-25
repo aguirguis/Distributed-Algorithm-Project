@@ -13,7 +13,7 @@ time_to_finish=300
 init_time=2
 
 #configure lossy network simulation
-#sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25% 50%
+sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25% 50%
 
 rm membership
 echo "5
@@ -26,7 +26,7 @@ echo "5
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`
 do
-    ./DA $i membership 500 &
+    ./da_proc $i membership 500 &
     da_proc_id[$i]=$!
 done
 
