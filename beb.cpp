@@ -47,6 +47,7 @@ void beb::bebBroadcast(Message message) {
 }
 
 void beb::beb_deliver(Message message) {
+	log_m.lock();
 	int from = message.initial_sender;
 //	cout << "BEB deliver: received " << message.seq_no << " from " << from << endl;
 	LogMessage lm;
@@ -57,6 +58,7 @@ void beb::beb_deliver(Message message) {
 	log_pointer++;
 	if(log_pointer == MAX_LOG_FILE)
 		write_log();
+	log_m.unlock();
 }
 
 void beb::deliver(Message message) {

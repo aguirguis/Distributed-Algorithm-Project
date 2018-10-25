@@ -11,6 +11,7 @@ string my_ip;
 int my_port;
 int recv_sock;
 int* send_sock;
-LogMessage messages_log[MAX_LOG_FILE];
+std::mutex log_m;
+LogMessage* messages_log;
 int log_pointer = 0;
 ofstream out_file;

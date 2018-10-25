@@ -1,6 +1,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 
 #ifndef STRUCTURES_H_
 #define STRUCTURES_H_
@@ -49,7 +50,7 @@ struct ProcessComp
 #define MAX_PROCESSES_NUM 10
 #define MAX_MESSAGE_NUM 10000
 #define MSG_LEN 64
-#define MAX_LOG_FILE 100	//let's say after each 100 message, I will write to a file
+#define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
 
 extern int nb_of_processes;
 extern Process processes[MAX_PROCESSES_NUM + 1];
@@ -59,7 +60,8 @@ extern string my_ip;
 extern int my_port;
 extern int recv_sock;
 extern int* send_sock;
-extern LogMessage messages_log[MAX_LOG_FILE];
+extern std::mutex log_m;
+extern LogMessage* messages_log;
 extern int log_pointer;
 extern ofstream out_file;
 

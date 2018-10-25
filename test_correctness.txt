@@ -8,7 +8,7 @@
 
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
-time_to_finish=3
+time_to_finish=300
 
 init_time=2
 
@@ -17,16 +17,16 @@ init_time=2
 
 rm membership
 echo "5
-1 127.0.0.1 31006
-2 127.0.0.1 31007
-3 127.0.0.1 31008
-4 127.0.0.1 31009
-5 127.0.0.1 31010" >> membership
+1 127.0.0.1 24500
+2 127.0.0.1 24501
+3 127.0.0.1 24502
+4 127.0.0.1 24503
+5 127.0.0.1 24504" >> membership
 
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`
 do
-    ./da_proc $i membership &
+    ./DA $i membership 500 &
     da_proc_id[$i]=$!
 done
 

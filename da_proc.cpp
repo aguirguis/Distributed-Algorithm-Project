@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
 	//initialize application
 	my_process_id = atoi(argv[1]);
 	ifstream membership (argv[2]);
+	int num_messages = atoi(argv[3]);
 	printf("Initializing at process %d.\n", my_process_id);
 	if(membership.is_open()) {
 		membership >> nb_of_processes;
@@ -90,6 +91,10 @@ int main(int argc, char** argv) {
 	else {
 		printf("Fail To Open File");
 	}
+	//some assertions for our assumptions
+	assert(nb_of_processes <= MAX_PROCESSES_NUM);
+	assert(num_messages <= MAX_MESSAGE_NUM);
+	messages_log = new LogMessage[MAX_LOG_FILE];
 	membership.close();
 	my_ip = processes[my_process_id - 1].ip;
 	my_port = processes[my_process_id - 1].port;
@@ -147,7 +152,7 @@ int main(int argc, char** argv) {
 
 	 //broadcast messages
 	 printf("Broadcasting messages at process %d.\n", my_process_id);
-	 	for(int i = 0; i < 5; i++) {
+	 	for(int i = 0; i < num_messages; i++) {
 			Message m;
 			fb.frb_broadcast(m);
 		}
