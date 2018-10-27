@@ -8,6 +8,7 @@
 #include <set>
 #include <string.h>
 #include <queue>
+#include <mutex>
 #include "assert.h"
 #include "structures.h"
 #ifndef PERFECT_LINK_H_
@@ -18,6 +19,7 @@ class perfect_link {
 
     private:
         set<Message, MessageComp> delivered;
+        std::mutex del_m;
 
     public:
         std::queue<Message> messages;

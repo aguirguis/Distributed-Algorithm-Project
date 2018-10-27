@@ -1,6 +1,6 @@
 #include "urb.hpp" 
 #include <list>
-
+#include <mutex>
 #ifndef FRB_H_
 #define FRB_H_
 
@@ -9,7 +9,9 @@ class frb : public deliver_callback { // @suppress("Class has a virtual method a
     public:
 		int lsn;
         std::list<Message>* pending;
+        std::mutex pen_m;
 		int* next;
+		std::mutex next_m;
         urb urb_instance;
         deliver_callback* callback;
 

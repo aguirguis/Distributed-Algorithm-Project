@@ -24,21 +24,25 @@ void frb::frb_deliver(Message message) {
     int from = message.initial_sender;
     int from_index = from - 1;
 //    cout << my_process_id << " FRB deliver: received " << message.seq_no << " from " << from << " send throught " << message.sender << endl;
+    pen_m.lock();
     pending[from_index].push_back(message);
+    pen_m.unlock();
 
     std::list<Message>::iterator message_iterator = pending[from_index].begin();
     while(message_iterator != pending[from_index].end()) {
         if(message_iterator -> seq_no <= next[from_index]) {
-        	//TODO: This also may have problems with concurrency
+        	//This also may have problems with concurrency
+        	next_m.lock();
             if(message_iterator -> seq_no == next[from_index]) next[from_index]++;
-
+            next_m.unlock();
             // since FRB is in contact with the application layer then it should also execute the callback received from the application layer
  //           if (callback != NULL) callback -> deliver(*message_iterator);
             urb_instance.bbb.deliver(*message_iterator);
 
             // erase the message
-            //TODO: This is suspicious....problems maybe here
+            pen_m.lock();
             message_iterator = pending[from_index].erase(message_iterator);
+            pen_m.unlock();
         }
         else {
             ++message_iterator;

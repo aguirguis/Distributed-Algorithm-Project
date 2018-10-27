@@ -92,7 +92,9 @@ void perfect_link::deliver(deliver_callback *bclass) {
 //		printf("ALLEEEEEEEEEEEEEEEEEEEEEEEEEEEZ Process %d Received one more message %d %d\n", my_process_id, message.initial_sender, message.seq_no);
 
 		// check if message is already delivered
+		del_m.lock();
 		bool is_delivered = delivered.find(message) != delivered.end();
+		del_m.unlock();
 		is_delivered = false;
 		if(!is_delivered) {
 			// deliver the received message
@@ -100,7 +102,9 @@ void perfect_link::deliver(deliver_callback *bclass) {
 			bclass -> deliver(message);
 
 			// add to delivered
+			del_m.lock();
 			delivered.insert(message);
+			del_m.unlock();
 		}
 //		else
 //			printf("Process %d ... the message %d %d has been already delivered!!!!!!! ...................\n", my_process_id, message.initial_sender, message.seq_no);
