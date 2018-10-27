@@ -20,26 +20,15 @@ void urb::urbBroadcast(Message message) {
     // add itself as the immediate sender
     // and put into the pending set
     message.sender = my_process_id;
-    // message.initial_sender = my_process_id;
     pending.insert(message);
     // since we did insert something in pending here,
     // we should probably check the condition
     // upon exists
-    /*
-    while(it != pending.end()) {
-        if(candeliver(*it) && (delivered.find(*it) == delivered.end())) {
-            delivered.insert(*it);
-            urb_deliver(*it, (*it).sender, ack);
-        }
-        it++;
-    }
-    */
     // Broadcast
     bbb.bebBroadcast(message);
 }
 
 void urb::urb_deliver(Message message, int from) {
-//	printf(" MARKER:::    At process %d, delivering a message %d %d %d\n", my_process_id, message.initial_sender, message.seq_no, message.sender);
     // add process to acknowledgement array
     // here, we identify messages by their initial sender
     // this may not be entirely correct,
@@ -51,9 +40,10 @@ void urb::urb_deliver(Message message, int from) {
     // how to identify messages.
     // this is wrong?!
     bool notInPending = true;
+    //TODO: concurrent execution with pending may create problems
     it = pending.begin();
     while(it != pending.end()) {
-        if(((*it).initial_sender == message.initial_sender) && ((*it).seq_no == message.seq_no)) {
+        if((((Message)*it).initial_sender == message.initial_sender) && (((Message)*it).seq_no == message.seq_no)) {
             notInPending = false;
             break;
         }
@@ -75,9 +65,12 @@ void urb::deliver(Message message) {
     it = pending.begin();
     while(it != pending.end()) {
         if(candeliver(*it) && not_in_deliver(*it)) {
+        	//TODO: concurrency with delivered may create problems
             delivered.insert(*it);
-            bbb.beb_deliver(*it);
-			if (frb_callback != NULL) frb_callback -> deliver(*it);
+			if (frb_callback != NULL)
+				frb_callback -> deliver(*it);
+			else
+	            bbb.beb_deliver(*it);
         }
         it++;
     }

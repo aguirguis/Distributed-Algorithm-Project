@@ -86,6 +86,7 @@ int main(int argc, char** argv) {
 			membership >> processes[i].ip;
 			membership >> processes[i].port;
 		}
+		//TODO: change to the required output name (.out)
 		out_file.open("da_proc_" + to_string(my_process_id) + ".txt");
 	}
 	else {
@@ -94,13 +95,14 @@ int main(int argc, char** argv) {
 	//some assertions for our assumptions
 	assert(nb_of_processes <= MAX_PROCESSES_NUM);
 	assert(num_messages <= MAX_MESSAGE_NUM);
+	assert(my_process_id <= nb_of_processes);
 	messages_log = new LogMessage[MAX_LOG_FILE];
 	membership.close();
 	my_ip = processes[my_process_id - 1].ip;
 	my_port = processes[my_process_id - 1].port;
-
 	// create the recv socket that the process will be listening on
 	recv_sock = socket(AF_INET, SOCK_DGRAM, 0);
+	assert(recv_sock > 0);
 	struct sockaddr_in recv_addr;
 	memset(&recv_addr, 0, sizeof(recv_addr));
 	socklen_t recv_addr_size = sizeof(recv_addr);
@@ -109,12 +111,14 @@ int main(int argc, char** argv) {
 	recv_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
 	if(bind(recv_sock, (const struct sockaddr *)&recv_addr, recv_addr_size) == SO_ERROR) {
 		printf("Fail to bind the receive socket of process %d \n", my_process_id);
+		exit(1);
 	}
 
-	// create the send socket that the process will be sending by
+	// create the send socket that the process will be sending by. One sending socket per process
 	send_sock = new int[nb_of_processes];
-	for(int i = 0; i < nb_of_processes; i++) {
+	for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
 		int sock = socket(AF_INET, SOCK_DGRAM, 0);
+		assert(sock > 0);
 		struct sockaddr_in send_addr;
 		memset(&send_addr, 0, sizeof(send_addr));
 		socklen_t send_addr_size = sizeof(send_addr);
@@ -123,6 +127,7 @@ int main(int argc, char** argv) {
 		send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
 		if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
 			printf("Fail to bind the sending socket of process %d \n", my_process_id);
+			exit(1);
 		}
 		send_sock[i] = sock;
 	}//end for
