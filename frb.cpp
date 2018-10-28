@@ -26,6 +26,7 @@ void frb::frb_deliver(Message message) {
 //    cout << my_process_id << " FRB deliver: received " << message.seq_no << " from " << from << " send throught " << message.sender << endl;
     pen_m.lock();
     pending[from_index].push_back(message);
+    pending[from_index].sort();
     pen_m.unlock();
 
     std::list<Message>::iterator message_iterator = pending[from_index].begin();

@@ -1,5 +1,6 @@
 #include "urb.hpp" 
 #include <list>
+#include <algorithm>
 #include <mutex>
 #ifndef FRB_H_
 #define FRB_H_

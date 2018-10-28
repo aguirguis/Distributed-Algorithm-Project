@@ -12,6 +12,10 @@ struct Message {
     int seq_no;
     int sender;				//last hop = immediate sender
     int initial_sender;		//the initial sender
+	bool operator <(const Message & m) const
+	{
+		return seq_no < m.seq_no;
+	}
 };
 
 // Message comparator / Functor
@@ -21,6 +25,14 @@ struct MessageComp
 	bool operator()(const Message& msg1, const Message& msg2) const
 	{
 		return (msg1.seq_no != msg2.seq_no) || (msg1.initial_sender != msg2.initial_sender);
+	}
+};
+
+struct comp_m
+{
+	bool operator()(const Message& msg1, const Message& msg2) const
+	{
+		return (msg1.seq_no < msg2.seq_no);
 	}
 };
 
