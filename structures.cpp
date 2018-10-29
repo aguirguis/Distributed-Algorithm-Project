@@ -16,3 +16,4 @@ std::mutex log_m;
 LogMessage* messages_log;
 int log_pointer = 0;
 ofstream out_file;
+std::vector<ack_message> acks;

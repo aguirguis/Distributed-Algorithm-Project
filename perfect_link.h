@@ -19,13 +19,13 @@
 class perfect_link {
 
     private:
-        set<Message, MessageComp> delivered;
+        std::vector<Message> delivered;
         std::mutex del_m;
 
     public:
         std::queue<Message> messages;
-        std::vector<ack_message> acks;
-        void send(int to, perfect_link* recv_acks);
+//        std::vector<ack_message> acks;
+        void send(int to);
         void deliver(deliver_callback *bclass);
         void recv_ack();
 };

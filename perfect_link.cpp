@@ -11,13 +11,15 @@ using namespace std;
 void perfect_link::recv_ack(){
 
 	while(true){
-		char buf[12];
+		char buf[16];
 		struct sockaddr_in addr_receiver;
 		socklen_t addr_receiver_size = sizeof(addr_receiver);
-		recvfrom(recvack_sock, (char*) buf, 12, 0, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
+		recvfrom(recvack_sock, (char*) buf, 16, MSG_WAITALL, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
 		ack_message ack;
-		memcpy(&ack,buf,12);
+		memcpy(&ack,buf,16);
 		acks.push_back(ack);
+//		if(ack.acking_process == 1)
+//			printf("Process %d received ack %d %d %d \n", my_process_id, ack.initial_sender, ack.seq_no, ack.acking_process);
 	}
 }
 /*
@@ -26,7 +28,7 @@ void perfect_link::recv_ack(){
                     sender and the sequence number of the message to be sent)
     @param to: the process id of the receiver
 */
-void perfect_link::send(int to, perfect_link* recv_acks) {
+void perfect_link::send(int to) {
     printf("Starting PL thread..waiting for message to send to %d\n", to);
 	while(true){
 		Message message;
@@ -47,20 +49,25 @@ void perfect_link::send(int to, perfect_link* recv_acks) {
 			addr_receiver.sin_addr.s_addr = inet_addr(processes[to - 1].ip.c_str());
 			socklen_t addr_receiver_size = sizeof(addr_receiver);
 			message.sender = my_process_id;
-			if(!sendto(send_sock[to-1], (const char *)&message, sizeof(message), 0, (const struct sockaddr *) &addr_receiver, addr_receiver_size))
+			if(!sendto(send_sock[to-1], (const char *)&message, sizeof(message), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size))
 			{
 				printf("Sending message through the socket was not successful\n");
 			}
+//			else
+//				printf("Process %d sends to %d message %d  %d \n", my_process_id, to, message.initial_sender, message.seq_no);
 			//Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
 			ack_message exp;
 			exp.acking_process = to;
-			exp.initial_sender = my_process_id;
+			exp.initial_sender = message.initial_sender;
 			exp.seq_no = message.seq_no;
+			exp.sender = message.sender;
 
-			usleep(1000);
-			bool acked = std::find(recv_acks->acks.begin(), recv_acks->acks.end(), exp) != recv_acks->acks.end();
-			if(acked)
+			sleep(1);
+			bool acked = std::find(acks.begin(), acks.end(), exp) != acks.end();
+			if(acked){
+//				printf("Porcess %d sending to %d  done and acked, last message sent %d %d\n", my_process_id, to, message.initial_sender, message.seq_no);
 				send_again = false;
+			}
 		}//end while send_again
 	}//end while true
 }
@@ -76,27 +83,33 @@ void perfect_link::deliver(deliver_callback *bclass) {
 		struct sockaddr_in addr_sender;
 		socklen_t addr_sender_size = sizeof(addr_sender);
 		struct Message message;
-		recvfrom(recv_sock, &message, sizeof(message), 0, ( struct sockaddr *) &addr_sender, &addr_sender_size);
+		recvfrom(recv_sock, &message, sizeof(message), MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
+//                if(my_process_id == 1)
+//			printf("Process %d received %d %d %d \n", my_process_id, message.initial_sender, message.seq_no, message.sender);
 		// check if message is already delivered
 		del_m.lock();
-		bool is_delivered = delivered.find(message) != delivered.end();
+		bool is_delivered = std::find(delivered.begin(), delivered.end(), message) != delivered.end();
 		del_m.unlock();
-		is_delivered = false;
+//		is_delivered = false;
 		if(!is_delivered) {
 			// deliver the received message
 			assert (bclass != NULL);
+//			if(my_process_id == 1)
+//				printf("Process %d BEB deliver %d %d \n", my_process_id, message.initial_sender, message.seq_no);
 			bclass -> deliver(message);
 
 			// add to delivered
 			del_m.lock();
-			delivered.insert(message);
+			delivered.push_back(message);
 			del_m.unlock();
 		}
 		ack_message ack_m;
 		ack_m.acking_process = my_process_id;
 		ack_m.seq_no = message.seq_no;
-		ack_m.initial_sender = message.sender;
+		ack_m.initial_sender = message.initial_sender;
+		ack_m.sender = message.sender;
 		addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
-		sendto(send_sock[message.sender-1], (const char *)&ack_m, 12, 0, (const struct sockaddr *) &addr_sender, addr_sender_size);
+		int a = sendto(send_sock[message.sender-1], (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
+		assert(a>0);
 	}
 }

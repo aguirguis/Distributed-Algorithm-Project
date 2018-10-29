@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <mutex>
-
+#include <vector>
 #ifndef STRUCTURES_H_
 #define STRUCTURES_H_
 
@@ -16,15 +16,20 @@ struct Message {
 	{
 		return seq_no < m.seq_no;
 	}
+        bool operator ==(const Message & m) const
+        {
+                return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));
+        }
 };
 
 struct ack_message {
     int seq_no;
     int acking_process;				//process to send the ack
     int initial_sender;		//the sender of this message
+    int sender;
 	bool operator ==(const ack_message & m) const
 	{
-		return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (acking_process == m.acking_process));
+		return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (acking_process == m.acking_process) && (sender == m.sender));
 	}
 };
 
@@ -84,6 +89,7 @@ struct ProcessComp
 extern int nb_of_processes;
 extern Process processes[MAX_PROCESSES_NUM + 1];
 
+extern std::vector<ack_message> acks;
 extern int my_process_id;
 extern string my_ip;
 extern int my_port;
