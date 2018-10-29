@@ -21,9 +21,10 @@ void beb::init(deliver_callback* bclass){
 	 }
 
 	 recv = std::thread(&perfect_link::deliver, recv_link, std::move(bclass));
+	 recv_ack = std::thread(&perfect_link::recv_ack, recv_link);
 	 for(int i=0;i<nb_of_processes;i++)
 		 if(processes[i].id != my_process_id){
-			 links.push_back(std::thread(&perfect_link::send, pl[i], std::move(processes[i].id)));
+			 links.push_back(std::thread(&perfect_link::send, pl[i], std::move(processes[i].id), std::move(recv_link)));
 		 }
 }
 
@@ -32,12 +33,12 @@ void beb::bebBroadcast(Message message) {
  lm.message_type='b';
  lm.seq_nr = message.seq_no;
  lm.sender = my_process_id;
- message.sender = my_process_id;
  messages_log[log_pointer] = lm;
  log_pointer++;
  if(log_pointer == MAX_LOG_FILE)
 	 write_log();
 
+	 message.sender = my_process_id;
  //send this message to all processes
  for(int i=0;i<nb_of_processes;i++)
 	 if(processes[i].id != my_process_id){

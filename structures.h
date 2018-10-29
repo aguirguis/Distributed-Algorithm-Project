@@ -18,6 +18,23 @@ struct Message {
 	}
 };
 
+struct ack_message {
+    int seq_no;
+    int acking_process;				//process to send the ack
+    int initial_sender;		//the sender of this message
+	bool operator ==(const ack_message & m) const
+	{
+		return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (acking_process == m.acking_process));
+	}
+};
+
+struct AckMessageComp
+{
+	bool operator()(const ack_message& msg1, const ack_message& msg2) const
+	{
+		return true;
+	}
+};
 // Message comparator / Functor
 // Compare objects with sequence number then with initial_sender id
 struct MessageComp
@@ -71,6 +88,7 @@ extern int my_process_id;
 extern string my_ip;
 extern int my_port;
 extern int recv_sock;
+extern int recvack_sock;
 extern int* send_sock;
 extern std::mutex log_m;
 extern LogMessage* messages_log;

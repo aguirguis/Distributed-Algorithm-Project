@@ -42,7 +42,7 @@ class pl_deliver_callback : public deliver_callback { // @suppress("Class has a 
             printf("prcoess %d has received message of sequence number %d from process %d\n", my_process_id, message.seq_no, message.initial_sender);
         }
 };
-
+/*
 void test_perfect_link() {
 
     if(my_process_id == 1) {
@@ -58,7 +58,7 @@ void test_perfect_link() {
         pl -> deliver(callback);
     }
 }
-
+*/
 beb test_bebBroadcast(){
 	beb bb;
 	bb.init(0);
@@ -114,6 +114,19 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	recvack_sock = socket(AF_INET, SOCK_DGRAM, 0);
+	assert(recvack_sock > 0);
+	struct sockaddr_in recvack_addr;
+	memset(&recvack_addr, 0, sizeof(recvack_addr));
+	socklen_t recvack_addr_size = sizeof(recvack_addr);
+	recvack_addr.sin_family = AF_INET;
+	recvack_addr.sin_port = htons(my_port+800);
+	recvack_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
+	if(bind(recvack_sock, (const struct sockaddr *)&recvack_addr, recvack_addr_size) == SO_ERROR) {
+		printf("Fail to bind the receive ack socket of process %d \n", my_process_id);
+		exit(1);
+	}
+
 	// create the send socket that the process will be sending by. One sending socket per process
 	send_sock = new int[nb_of_processes];
 	for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
@@ -162,6 +175,10 @@ int main(int argc, char** argv) {
 			fb.frb_broadcast(m);
 		}
 		fb.urb_instance.bbb.recv.join();
+		fb.urb_instance.bbb.recv_ack.join();
+		for(int i=0;i<nb_of_processes;i++){
+			fb.urb_instance.bbb.links[i].join();
+		}
 
 		// Message m1;
 		// m1.seq_no = 0;

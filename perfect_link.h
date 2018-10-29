@@ -23,8 +23,10 @@ class perfect_link {
 
     public:
         std::queue<Message> messages;
-        void send(int to);
+        std::vector<ack_message> acks;
+        void send(int to, perfect_link* recv_acks);
         void deliver(deliver_callback *bclass);
+        void recv_ack();
 };
 
 

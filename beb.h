@@ -19,6 +19,7 @@ class beb: public deliver_callback { // @suppress("Class has a virtual method an
 		perfect_link** pl;
 		perfect_link* recv_link;
 		std::thread recv;
+		std::thread recv_ack;
 		deliver_callback* bclass;
 
 		void init(deliver_callback* bclass);

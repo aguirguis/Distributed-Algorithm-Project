@@ -9,7 +9,6 @@
 #include "structures.h"
 #include "beb.h"
 #include "urb.hpp"
-//#include "beb.h"
 
 void urb::init(deliver_callback* callback){
 	bbb.init(this);
@@ -77,7 +76,7 @@ void urb::deliver(Message message) {
         	//concurrency with delivered may create problems
         	del_m.lock();
             delivered.insert(*it);
-            printf("Process %d deliver %d %d \n", my_process_id, (*it).initial_sender, (*it).seq_no);
+ //           printf("Process %d deliver %d %d \n", my_process_id, (*it).initial_sender, (*it).seq_no);
             del_m.unlock();
 			if (frb_callback != NULL)
 				frb_callback -> deliver(*it);

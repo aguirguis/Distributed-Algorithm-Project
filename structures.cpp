@@ -10,6 +10,7 @@ int my_process_id;
 string my_ip;
 int my_port;
 int recv_sock;
+int recvack_sock;
 int* send_sock;
 std::mutex log_m;
 LogMessage* messages_log;
