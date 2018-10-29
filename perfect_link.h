@@ -9,6 +9,7 @@
 #include <string.h>
 #include <queue>
 #include <mutex>
+#include <algorithm>
 #include "assert.h"
 #include "structures.h"
 #ifndef PERFECT_LINK_H_
