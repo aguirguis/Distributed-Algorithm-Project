@@ -66,17 +66,21 @@ void perfect_link::send(int to) {
 //				printf("Process %d sends to %d: %d messages in %d bytes\n", my_process_id, to, mc.num, s);
 			//Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
 			ack_message exp;
-			Message message = mc.c[0];
-			exp.acking_process = to;
-			exp.initial_sender = message.initial_sender;
-			exp.seq_no = message.seq_no;
-			exp.sender = message.sender;
-
 			sleep(1);
-			bool acked = std::find(acks.begin(), acks.end(), exp) != acks.end();
-			if(acked){
-//				printf("Process %d sending to %d  done and acked\n", my_process_id, to);
-				send_again = false;
+			for(Message message: mc.c){
+//			Message message = mc.c[0];
+				exp.acking_process = to;
+				exp.initial_sender = message.initial_sender;
+				exp.seq_no = message.seq_no;
+				exp.sender = message.sender;
+
+				bool acked = std::find(acks.begin(), acks.end(), exp) != acks.end();
+				if(acked){
+					send_again = false;
+				}else{
+					send_again = true;
+					break;
+				}
 			}
 //			else
 //				printf("Process %d will send again to %d \n", my_process_id, to);
@@ -121,15 +125,16 @@ void perfect_link::deliver(deliver_callback *bclass) {
 				delivered.push_back(message);
 				del_m.unlock();
 			}
+			ack_message ack_m;
+			ack_m.acking_process = my_process_id;
+			ack_m.seq_no = message.seq_no;
+			ack_m.initial_sender = message.initial_sender;
+			ack_m.sender = message.sender;
+			addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
+			int a = sendto(send_sock[message.sender-1], (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
+			usleep(1000);
+			assert(a>0);
 		}//end loop on received messages
-		Message message = mc.c[0];
-		ack_message ack_m;
-		ack_m.acking_process = my_process_id;
-		ack_m.seq_no = message.seq_no;
-		ack_m.initial_sender = message.initial_sender;
-		ack_m.sender = message.sender;
-		addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
-		int a = sendto(send_sock[message.sender-1], (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
-		assert(a>0);
+//		Message message = mc.c[0];
 	}
 }
