@@ -29,15 +29,6 @@ void beb::init(deliver_callback* bclass){
 }
 
 void beb::bebBroadcast(Message message) {
- LogMessage lm;
- lm.message_type='b';
- lm.seq_nr = message.seq_no;
- lm.sender = my_process_id;
- messages_log[log_pointer] = lm;
- log_pointer++;
- if(log_pointer == MAX_LOG_FILE)
-	 write_log();
-
 	 message.sender = my_process_id;
  //send this message to all processes
  for(int i=0;i<nb_of_processes;i++)
@@ -49,8 +40,6 @@ void beb::bebBroadcast(Message message) {
 
 void beb::beb_deliver(Message message) {
 	log_m.lock();
-	int from = message.initial_sender;
-//	cout << "BEB deliver: received " << message.seq_no << " from " << from << endl;
 	LogMessage lm;
 	lm.message_type='d';
 	lm.sender = message.initial_sender;

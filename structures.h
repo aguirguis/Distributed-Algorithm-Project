@@ -22,6 +22,11 @@ struct Message {
         }
 };
 
+struct m_container{
+	Message c[10];
+	int num;
+};
+
 struct ack_message {
     int seq_no;
     int acking_process;				//process to send the ack

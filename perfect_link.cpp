@@ -31,10 +31,19 @@ void perfect_link::recv_ack(){
 void perfect_link::send(int to) {
     printf("Starting PL thread..waiting for message to send to %d\n", to);
 	while(true){
-		Message message;
+//		Message message;
+		m_container mc;
 		if (!this->messages.empty()){
-			message = this->messages.front();
-			this->messages.pop();
+			mc.num=0;
+			while((!this->messages.empty()) && (mc.num<10)){
+//				printf("Size of queue: %d, mc.num %d\n", messages.size(), mc.num);
+				Message message = this->messages.front();
+				message.sender = my_process_id;
+				mc.c[mc.num] = message;
+				mc.num++;
+				this->messages.pop();
+			}
+//			printf("Done with preparing this package, process %d will send %d messages to %d\n", my_process_id, mc.num, to);
 		}else{
 			usleep(1000);
 			continue;
@@ -48,15 +57,16 @@ void perfect_link::send(int to) {
 			addr_receiver.sin_port = htons(processes[to - 1].port);
 			addr_receiver.sin_addr.s_addr = inet_addr(processes[to - 1].ip.c_str());
 			socklen_t addr_receiver_size = sizeof(addr_receiver);
-			message.sender = my_process_id;
-			if(!sendto(send_sock[to-1], (const char *)&message, sizeof(message), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size))
+			int s;
+			if(!(s = sendto(send_sock[to-1], (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 			{
 				printf("Sending message through the socket was not successful\n");
 			}
 //			else
-//				printf("Process %d sends to %d message %d  %d \n", my_process_id, to, message.initial_sender, message.seq_no);
+//				printf("Process %d sends to %d: %d messages in %d bytes\n", my_process_id, to, mc.num, s);
 			//Here, I should initiate a timeout to wait for a packet....if timeout fires, send the packet again
 			ack_message exp;
+			Message message = mc.c[0];
 			exp.acking_process = to;
 			exp.initial_sender = message.initial_sender;
 			exp.seq_no = message.seq_no;
@@ -65,9 +75,11 @@ void perfect_link::send(int to) {
 			sleep(1);
 			bool acked = std::find(acks.begin(), acks.end(), exp) != acks.end();
 			if(acked){
-//				printf("Porcess %d sending to %d  done and acked, last message sent %d %d\n", my_process_id, to, message.initial_sender, message.seq_no);
+//				printf("Process %d sending to %d  done and acked\n", my_process_id, to);
 				send_again = false;
 			}
+//			else
+//				printf("Process %d will send again to %d \n", my_process_id, to);
 		}//end while send_again
 	}//end while true
 }
@@ -82,27 +94,35 @@ void perfect_link::deliver(deliver_callback *bclass) {
 	while(1){	//always true, always waiting for messages to deliver
 		struct sockaddr_in addr_sender;
 		socklen_t addr_sender_size = sizeof(addr_sender);
-		struct Message message;
-		recvfrom(recv_sock, &message, sizeof(message), MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
-//                if(my_process_id == 1)
-//			printf("Process %d received %d %d %d \n", my_process_id, message.initial_sender, message.seq_no, message.sender);
+//		struct Message message;
+		char buf[1000];
+		m_container mc;
+		int r = recvfrom(recv_sock, &buf, 1000, MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
+//		printf("Process %d received %d bytes \n", my_process_id, r);
+		memcpy(&mc, buf, r);
+//		printf("Number of messages included with this received container is %d\n", mc.num);
 		// check if message is already delivered
-		del_m.lock();
-		bool is_delivered = std::find(delivered.begin(), delivered.end(), message) != delivered.end();
-		del_m.unlock();
-//		is_delivered = false;
-		if(!is_delivered) {
-			// deliver the received message
-			assert (bclass != NULL);
-//			if(my_process_id == 1)
-//				printf("Process %d BEB deliver %d %d \n", my_process_id, message.initial_sender, message.seq_no);
-			bclass -> deliver(message);
-
-			// add to delivered
+		for(int i=0;i<mc.num;i++){
+			Message message = mc.c[i];
+//			printf("Details of received message: %d %d %d \n", message.initial_sender, message.seq_no, message.sender);
 			del_m.lock();
-			delivered.push_back(message);
+			bool is_delivered = std::find(delivered.begin(), delivered.end(), message) != delivered.end();
 			del_m.unlock();
-		}
+	//		is_delivered = false;
+			if(!is_delivered) {
+				// deliver the received message
+				assert (bclass != NULL);
+	//			if(my_process_id == 1)
+	//				printf("Process %d BEB deliver %d %d \n", my_process_id, message.initial_sender, message.seq_no);
+				bclass -> deliver(message);
+
+				// add to delivered
+				del_m.lock();
+				delivered.push_back(message);
+				del_m.unlock();
+			}
+		}//end loop on received messages
+		Message message = mc.c[0];
 		ack_message ack_m;
 		ack_m.acking_process = my_process_id;
 		ack_m.seq_no = message.seq_no;

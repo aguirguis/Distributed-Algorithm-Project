@@ -15,6 +15,14 @@ void frb::frb_broadcast(Message message) {
     message.sender = my_process_id;
     message.initial_sender = my_process_id;
 
+    LogMessage lm;
+    lm.message_type='b';
+    lm.seq_nr = message.seq_no;
+    lm.sender = my_process_id;
+    messages_log[log_pointer] = lm;
+    log_pointer++;
+    if(log_pointer == MAX_LOG_FILE)
+   	 write_log();
 //    cout << my_process_id << " FRBBroadcast from this process" << endl;
     // broadcast the message using urb 
     urb_instance.urbBroadcast(message);
