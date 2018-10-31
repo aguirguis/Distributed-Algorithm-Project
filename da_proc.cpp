@@ -127,21 +127,6 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	// TODO: added
-	send_sock_ack = socket(AF_INET, SOCK_DGRAM, 0);
-	assert(send_sock_ack > 0);
-	struct sockaddr_in send_ack_addr;
-	memset(&send_ack_addr, 0, sizeof(send_ack_addr));
-	socklen_t send_ack_addr_size = sizeof(send_ack_addr);
-	send_ack_addr.sin_family = AF_INET;
-	send_ack_addr.sin_port = htons(my_port + 1800);
-	send_ack_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-	if(bind(send_sock_ack, (const struct sockaddr *)&send_ack_addr, send_ack_addr_size) == SO_ERROR) {
-		printf("Fail to bind the sending socket of process %d \n", my_process_id);
-		exit(1);
-	}
-
-	// TODO: added
 	send_sock_all = socket(AF_INET, SOCK_DGRAM, 0);
 	assert(send_sock_all > 0);
 	struct sockaddr_in send_addr;
@@ -173,16 +158,6 @@ int main(int argc, char** argv) {
 	// 	send_sock[i] = sock;
 	// }//end for
 
-	// test perfect links
-	//test_perfect_link();
-
-	//test bebBroadcast
-//	beb bb = test_bebBroadcast();
-
-	//test URB
-	 // urb ur;
-	 // ur.init(0);
-
 	// test frb_broadcast
 	frb fb;
 	fb.init(new pl_deliver_callback());
@@ -206,33 +181,6 @@ int main(int argc, char** argv) {
 		fb.urb_instance.bbb.recv_ack.join();
 		fb.urb_instance.bbb.resend.join();
 		fb.urb_instance.bbb.send.join();
-		// for(int i=0;i<nb_of_processes;i++){
-		// 	fb.urb_instance.bbb.links[i].join();
-		// }
-
-		// Message m1;
-		// m1.seq_no = 0;
-		// m1.initial_sender = my_process_id;
-		// bb.bebBroadcast(m1);
-		// sleep(10);
-		// Message m2;
-		// m2.seq_no = 1;
-		// m2.initial_sender = my_process_id;
-		// bb.bebBroadcast(m2);
-		// bb.recv.join();
-		//  Message m;
-		//  m.seq_no = 0;
-		//  m.initial_sender = my_process_id;
-		// // //bb.bebBroadcast(m);
-		// // //bb.recv.join();
-		//  ur.urbBroadcast(m);
-		//
-		//  Message m2;
-		//  m2.seq_no = 1;
-		//  m2.initial_sender = my_process_id;
-		//  ur.urbBroadcast(m2);
-		//
-		//  ur.bbb.recv.join();
 
 	 //wait until stopped
 	 while(1) {

@@ -24,38 +24,37 @@ void perfect_link::send_all() {
 */
 void perfect_link::send(int to) {
     // printf("Starting PL thread..waiting for message to send to %d\n", to);
-	// while(true){
-		m_container mc;
-		if (!this->messages_all[to - 1].empty()){
-			mc.num=0;
-			while((!this->messages_all[to - 1].empty()) && (mc.num<10)){
-				Message message = this->messages_all[to - 1].front();
-				message.sender = my_process_id;
-				mc.c[mc.num] = message;
-				mc.num++;
-				this->messages_all[to - 1].pop();
-			}
-		}else{
-			// usleep(1000);
-			// continue;
-			return;
+	m_container mc;
+	if (!this->messages_all[to - 1].empty()) {
+		mc.num=0;
+		while((!this->messages_all[to - 1].empty()) && (mc.num<10)){
+			Message message = this->messages_all[to - 1].front();
+			message.sender = my_process_id;
+			mc.c[mc.num] = message;
+			mc.num++;
+			this->messages_all[to - 1].pop();
 		}
-		struct sockaddr_in addr_receiver;
-		addr_receiver.sin_family = AF_INET;
-		addr_receiver.sin_port = htons(processes[to - 1].port);
-		addr_receiver.sin_addr.s_addr = inet_addr(processes[to - 1].ip.c_str());
-		socklen_t addr_receiver_size = sizeof(addr_receiver);
-		int s;
+	}
+	else {
+		return;
+	}
+	struct sockaddr_in addr_receiver;
+	addr_receiver.sin_family = AF_INET;
+	addr_receiver.sin_port = htons(processes[to - 1].port);
+	addr_receiver.sin_addr.s_addr = inet_addr(processes[to - 1].ip.c_str());
+	socklen_t addr_receiver_size = sizeof(addr_receiver);
+	int s;
+	send_sock_m.lock();
 		if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 		{
 			printf("Sending message through the socket was not successful\n");
 		}
-		for(Message message: mc.c) {
-			un_acked_messages_m.lock();
-				un_acked_messages[to - 1].push_back(message);
-			un_acked_messages_m.unlock();
-		}
-	// }//end while true
+	send_sock_m.unlock();
+	for(Message message: mc.c) {
+		un_acked_messages_m.lock();
+			un_acked_messages[to - 1].push_back(message);
+		un_acked_messages_m.unlock();
+	}
 }
 
 /*
@@ -90,13 +89,12 @@ void perfect_link::deliver(deliver_callback *bclass) {
 			}
 			ack_message ack_m;
 			ack_m.acking_process = my_process_id;
-			ack_m.seq_no = message.seq_no;
-			ack_m.initial_sender = message.initial_sender;
-			ack_m.sender = message.sender;
 			ack_m.message = message;
 			addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
-			int a = sendto(send_sock_ack, (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
-			assert(a>0);
+			send_sock_m.lock();
+				int a = sendto(send_sock_all, (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
+				assert(a>0);
+			send_sock_m.unlock();
 			usleep(1000);
 		}//end while true
 	}
@@ -143,18 +141,22 @@ void perfect_link::resend() {
 					mc.c[mc.num] = message;
 					mc.num++;
 					if(mc.num >= 10) {
-						if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
-						{
-							printf("Sending message through the socket was not successful\n");
-						}
+						send_sock_m.lock();
+							if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
+							{
+								printf("Sending message through the socket was not successful\n");
+							}
+						send_sock_m.unlock();
 						mc.num = 0;
 					}
 				}
 				if(mc.num != 0) {
-					if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
-					{
-						printf("Sending message through the socket was not successful\n");
-					}
+					send_sock_m.lock();
+						if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
+						{
+							printf("Sending message through the socket was not successful\n");
+						}
+					send_sock_m.unlock();
 				}
 
 			}

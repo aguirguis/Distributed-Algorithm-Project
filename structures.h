@@ -28,14 +28,11 @@ struct m_container{
 };
 
 struct ack_message {
-    int seq_no;
     int acking_process;				//process to send the ack
-    int initial_sender;		//the sender of this message
-    int sender;
     Message message;
 	bool operator ==(const ack_message & m) const
 	{
-		return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (acking_process == m.acking_process) && (sender == m.sender) && (message == m.message));
+		return ((acking_process == m.acking_process) && (message == m.message));
 	}
 };
 
@@ -95,16 +92,14 @@ struct ProcessComp
 extern int nb_of_processes;
 extern Process processes[MAX_PROCESSES_NUM];
 
-extern std::vector<ack_message> acks;
-extern std::vector<Message> un_acked_messages[MAX_PROCESSES_NUM]; // TODO: added
-extern std::mutex un_acked_messages_m; // TODO: added
+extern std::vector<Message> un_acked_messages[MAX_PROCESSES_NUM];
+extern std::mutex un_acked_messages_m;
 extern int my_process_id;
 extern string my_ip;
 extern int my_port;
 extern int recv_sock;
 extern int recvack_sock;
 extern int* send_sock;
-extern int send_sock_ack; // TODO: added
 extern int send_sock_all; // TODO: added
 extern std::mutex log_m;
 extern LogMessage* messages_log;

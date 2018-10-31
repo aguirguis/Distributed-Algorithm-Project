@@ -16,8 +16,6 @@ std::mutex log_m;
 LogMessage* messages_log;
 int log_pointer = 0;
 ofstream out_file;
-std::vector<ack_message> acks;
 std::vector<Message> un_acked_messages[MAX_PROCESSES_NUM];
 std::mutex un_acked_messages_m;
-int send_sock_ack;
 int send_sock_all;
