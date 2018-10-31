@@ -4,7 +4,7 @@
 using namespace std;
 
 int nb_of_processes;
-Process processes[MAX_PROCESSES_NUM + 1];
+Process processes[MAX_PROCESSES_NUM];
 
 int my_process_id;
 string my_ip;
@@ -17,3 +17,5 @@ LogMessage* messages_log;
 int log_pointer = 0;
 ofstream out_file;
 std::vector<ack_message> acks;
+std::vector<Message> un_acked_messages[MAX_PROCESSES_NUM];
+std::mutex un_acked_messages_m;

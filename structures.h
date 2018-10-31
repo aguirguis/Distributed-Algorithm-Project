@@ -16,10 +16,10 @@ struct Message {
 	{
 		return seq_no < m.seq_no;
 	}
-        bool operator ==(const Message & m) const
-        {
-                return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));
-        }
+    bool operator ==(const Message & m) const
+    {
+        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));
+    }
 };
 
 struct m_container{
@@ -32,9 +32,10 @@ struct ack_message {
     int acking_process;				//process to send the ack
     int initial_sender;		//the sender of this message
     int sender;
+    Message message;
 	bool operator ==(const ack_message & m) const
 	{
-		return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (acking_process == m.acking_process) && (sender == m.sender));
+		return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (acking_process == m.acking_process) && (sender == m.sender) && (message == m.message));
 	}
 };
 
@@ -92,9 +93,11 @@ struct ProcessComp
 #define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
 
 extern int nb_of_processes;
-extern Process processes[MAX_PROCESSES_NUM + 1];
+extern Process processes[MAX_PROCESSES_NUM];
 
 extern std::vector<ack_message> acks;
+extern std::vector<Message> un_acked_messages[MAX_PROCESSES_NUM]; // TODO: added
+extern std::mutex un_acked_messages_m; // TODO: added
 extern int my_process_id;
 extern string my_ip;
 extern int my_port;

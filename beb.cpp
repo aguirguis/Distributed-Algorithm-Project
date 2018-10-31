@@ -22,6 +22,7 @@ void beb::init(deliver_callback* bclass){
 
 	 recv = std::thread(&perfect_link::deliver, recv_link, std::move(bclass));
 	 recv_ack = std::thread(&perfect_link::recv_ack, recv_link);
+	 recv_resend = std::thread(&perfect_link::resend, recv_link);
 	 for(int i=0;i<nb_of_processes;i++)
 		 if(processes[i].id != my_process_id){
 			 links.push_back(std::thread(&perfect_link::send, pl[i], std::move(processes[i].id)));
