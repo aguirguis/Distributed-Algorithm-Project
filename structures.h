@@ -104,6 +104,8 @@ extern int my_port;
 extern int recv_sock;
 extern int recvack_sock;
 extern int* send_sock;
+extern int send_sock_ack; // TODO: added
+extern int send_sock_all; // TODO: added
 extern std::mutex log_m;
 extern LogMessage* messages_log;
 extern int log_pointer;

@@ -127,23 +127,51 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	// TODO: added
+	send_sock_ack = socket(AF_INET, SOCK_DGRAM, 0);
+	assert(send_sock_ack > 0);
+	struct sockaddr_in send_ack_addr;
+	memset(&send_ack_addr, 0, sizeof(send_ack_addr));
+	socklen_t send_ack_addr_size = sizeof(send_ack_addr);
+	send_ack_addr.sin_family = AF_INET;
+	send_ack_addr.sin_port = htons(my_port + 1800);
+	send_ack_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
+	if(bind(send_sock_ack, (const struct sockaddr *)&send_ack_addr, send_ack_addr_size) == SO_ERROR) {
+		printf("Fail to bind the sending socket of process %d \n", my_process_id);
+		exit(1);
+	}
+
+	// TODO: added
+	send_sock_all = socket(AF_INET, SOCK_DGRAM, 0);
+	assert(send_sock_all > 0);
+	struct sockaddr_in send_addr;
+	memset(&send_addr, 0, sizeof(send_addr));
+	socklen_t send_addr_size = sizeof(send_addr);
+	send_addr.sin_family = AF_INET;
+	send_addr.sin_port = htons(my_port + 1000);
+	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
+	if(bind(send_sock_all, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
+		printf("Fail to bind the sending socket of process %d \n", my_process_id);
+		exit(1);
+	}
+
 	// create the send socket that the process will be sending by. One sending socket per process
-	send_sock = new int[nb_of_processes];
-	for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
-		int sock = socket(AF_INET, SOCK_DGRAM, 0);
-		assert(sock > 0);
-		struct sockaddr_in send_addr;
-		memset(&send_addr, 0, sizeof(send_addr));
-		socklen_t send_addr_size = sizeof(send_addr);
-		send_addr.sin_family = AF_INET;
-		send_addr.sin_port = htons(my_port + 1000+i);
-		send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-		if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
-			printf("Fail to bind the sending socket of process %d \n", my_process_id);
-			exit(1);
-		}
-		send_sock[i] = sock;
-	}//end for
+	// send_sock = new int[nb_of_processes];
+	// for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
+	// 	int sock = socket(AF_INET, SOCK_DGRAM, 0);
+	// 	assert(sock > 0);
+	// 	struct sockaddr_in send_addr;
+	// 	memset(&send_addr, 0, sizeof(send_addr));
+	// 	socklen_t send_addr_size = sizeof(send_addr);
+	// 	send_addr.sin_family = AF_INET;
+	// 	send_addr.sin_port = htons(my_port + 1000+i);
+	// 	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
+	// 	if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
+	// 		printf("Fail to bind the sending socket of process %d \n", my_process_id);
+	// 		exit(1);
+	// 	}
+	// 	send_sock[i] = sock;
+	// }//end for
 
 	// test perfect links
 	//test_perfect_link();
@@ -176,9 +204,11 @@ int main(int argc, char** argv) {
 		}
 		fb.urb_instance.bbb.recv.join();
 		fb.urb_instance.bbb.recv_ack.join();
-		for(int i=0;i<nb_of_processes;i++){
-			fb.urb_instance.bbb.links[i].join();
-		}
+		fb.urb_instance.bbb.resend.join();
+		fb.urb_instance.bbb.send.join();
+		// for(int i=0;i<nb_of_processes;i++){
+		// 	fb.urb_instance.bbb.links[i].join();
+		// }
 
 		// Message m1;
 		// m1.seq_no = 0;

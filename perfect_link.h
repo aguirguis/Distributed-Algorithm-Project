@@ -21,9 +21,12 @@ class perfect_link {
     private:
         std::vector<Message> delivered;
         std::mutex del_m;
+        std::mutex sock_m;
 
     public:
         std::queue<Message> messages;
+        std::queue<Message> messages_all[MAX_PROCESSES_NUM];
+        void send_all();
         void send(int to);
         void deliver(deliver_callback *bclass);
         void recv_ack();
