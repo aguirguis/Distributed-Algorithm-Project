@@ -93,8 +93,8 @@ void perfect_link::deliver(deliver_callback *bclass) {
 			addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
 			send_sock_m.lock();
 				int a = sendto(send_sock_all, (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
-				assert(a>0);
 			send_sock_m.unlock();
+			// assert(a>0);
 			usleep(1000);
 		}//end while true
 	}

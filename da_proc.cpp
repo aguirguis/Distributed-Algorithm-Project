@@ -30,7 +30,18 @@ static void stop(int signum) {
 	//write/flush output file if necessary
 	printf("Writing output....number of lines in log: %d \n", log_pointer);
 	write_log();
-	out_file.close();
+
+
+	// close the sockets
+	if(signum == SIGTERM) {
+		int close1 = close(recv_sock);
+		assert(close1 >= 0);
+		int close2 = close(recvack_sock);
+		assert(close2 >= 0);
+		int close3 = close(send_sock_all);
+		assert(close3 >= 0);
+		out_file.close();
+	}
 
 	//exit directly from signal handler
 	exit(0);
@@ -68,7 +79,7 @@ beb test_bebBroadcast(){
 int main(int argc, char** argv) {
 
 	//set signal handlers
-	signal(SIGUSR1, start);
+	signal(SIGUSR2, start);
 	signal(SIGTERM, stop);
 	signal(SIGINT, stop);
 

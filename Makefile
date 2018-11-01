@@ -10,4 +10,4 @@ da_proc: da_proc.cpp
 	g++ -pthread -o "da_proc"  ./beb.o ./urb.o ./frb.o ./da_proc.o ./perfect_link.o ./structures.o
 
 clean:
-	rm da_proc da_proc_*.txt *.d *.o
+	rm da_proc da_proc_*.out *.d *.o
