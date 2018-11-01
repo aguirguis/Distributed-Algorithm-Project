@@ -5,5 +5,7 @@
 !*.hpp
 !*.md
 !*.txt
+!*.sh
+!*.py
 
 da_proc_*.txt

@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 			membership >> processes[i].port;
 		}
 		//TODO: change to the required output name (.out)
-		out_file.open("da_proc_" + to_string(my_process_id) + ".txt");
+		out_file.open("da_proc_" + to_string(my_process_id) + ".out");
 	}
 	else {
 		printf("Fail To Open File");
