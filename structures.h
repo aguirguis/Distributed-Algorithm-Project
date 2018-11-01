@@ -36,6 +36,11 @@ struct ack_message {
 	}
 };
 
+struct ack_container{
+	ack_message a[10];
+	int num;
+};
+
 struct AckMessageComp
 {
 	bool operator()(const ack_message& msg1, const ack_message& msg2) const

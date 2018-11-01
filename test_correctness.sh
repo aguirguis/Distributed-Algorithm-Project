@@ -28,7 +28,7 @@ echo "5
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`
 do
-    ./da_proc $i membership 100 &
+    ./da_proc $i membership 10 &
     da_proc_id[$i]=$!
 done
 
@@ -56,7 +56,7 @@ done
 kill -TERM "${da_proc_id[4]}" #crash process 4
 da_proc_id[4]=""
 kill -STOP "${da_proc_id[1]}" #pause process 1
-sleep 0.5
+sleep 5
 kill -CONT "${da_proc_id[1]}" #resume process 1
 
 #leave some time for the correct processes to broadcast all messages

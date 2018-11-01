@@ -49,6 +49,8 @@ void perfect_link::send(int to) {
 		{
 			printf("Sending message through the socket was not successful\n");
 		}
+//		else
+//			printf("Process %d sends container of %d messages to %d \n", my_process_id, mc.num, to);
 	send_sock_m.unlock();
 	for(Message message: mc.c) {
 		un_acked_messages_m.lock();
@@ -72,6 +74,9 @@ void perfect_link::deliver(deliver_callback *bclass) {
 		int r = recvfrom(recv_sock, &buf, 1000, MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
 		memcpy(&mc, buf, r);
 		// check if message is already delivered
+//		printf("Process %d received a container of %d messages from %d \n", my_process_id, mc.num, mc.c[0].sender);
+		ack_container ac;
+		ac.num = mc.num;
 		for(int i=0;i<mc.num;i++){
 			Message message = mc.c[i];
 			del_m.lock();
@@ -90,32 +95,40 @@ void perfect_link::deliver(deliver_callback *bclass) {
 			ack_message ack_m;
 			ack_m.acking_process = my_process_id;
 			ack_m.message = message;
-			addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
-			send_sock_m.lock();
-				int a = sendto(send_sock_all, (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
-			send_sock_m.unlock();
+			ac.a[i] = ack_m;
+//			addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
+//			send_sock_m.lock();
+//				int a = sendto(send_sock_all, (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
+//			send_sock_m.unlock();
 			// assert(a>0);
-			usleep(1000);
-		}//end while true
-	}
+//			usleep(1000);
+		}//end for loop
+                addr_sender.sin_port = htons(processes[mc.c[0].sender - 1].port + 800);
+                send_sock_m.lock();
+                int a = sendto(send_sock_all, (const char *)&ac, ac.num*sizeof(ack_message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
+                send_sock_m.unlock();
+	}//end while True
 }
 
 // This method works in one separate threads to receive acks
 void perfect_link::recv_ack(){
 	while(true){
-		char buf[16];
+		char buf[1000];
 		struct sockaddr_in addr_receiver;
 		socklen_t addr_receiver_size = sizeof(addr_receiver);
-		recvfrom(recvack_sock, (char*) buf, 16, MSG_WAITALL, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
-		ack_message ack;
-		memcpy(&ack,buf,16);
+		int r = recvfrom(recvack_sock, (char*) buf, 1000, MSG_WAITALL, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
+		ack_container ac;
+		memcpy(&ac,buf,r);
 
-		int to = ack.acking_process;
-		un_acked_messages_m.lock();
+		for(int i=0;i<ac.num;i++){
+			ack_message ack = ac.a[i];
+			int to = ack.acking_process;
+			un_acked_messages_m.lock();
 			std::vector<Message> msg_vector = un_acked_messages[to - 1];
 			msg_vector.erase(std::remove(msg_vector.begin(), msg_vector.end(), ack.message), msg_vector.end());
-		un_acked_messages_m.unlock();
-	}
+			un_acked_messages_m.unlock();
+		}//end for loop
+	}//end while true
 }
 
 
