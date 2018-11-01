@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# This is a test for 5 processes. Only one process broadcasts in the start. Then some of the others come online, but the first one crashes.
+#
+############################################
+
+#time to wait for correct processes to broadcast all messages (in seconds)
+#(should be adapted to the number of messages to send)
+time_to_finish=100
+
+init_time=2
+
+#configure lossy network simulation
+sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25% 50%
+
+rm membership
+echo "5
+1 127.0.0.1 50500
+2 127.0.0.1 50501
+3 127.0.0.1 50502
+4 127.0.0.1 50503
+5 127.0.0.1 50504" >> membership
+
+#start 5 processes, each broadcasting 5 messages
+for i in `seq 1 5`
+do
+    ./da_proc $i membership 5 &
+    da_proc_id[$i]=$!
+done
+
+#leave some time for process initialization
+sleep $init_time
+
+#do some nasty stuff like process crashes and delays
+kill -TERM "${da_proc_id[1]}" # crash 1
+kill -STOP "${da_proc_id[2]}" # pause 2
+kill -STOP "${da_proc_id[3]}" # pause 3
+kill -STOP "${da_proc_id[4]}" # pause 4
+
+#start broadcasting
+for i in `seq 1 5`
+do
+    if [ -n "${da_proc_id[$i]}" ]; then
+	kill -USR1 "${da_proc_id[$i]}"
+    fi
+done
+
+#sleep and wake up
+sleep 10
+kill -CONT "${da_proc_id[2]}"
+kill -CONT "${da_proc_id[3]}"
+kill -CONT "${da_proc_id[4]}"
+sleep 10
+kill -TERM "${da_proc_id[5]}"
+
+
+#leave some time for the correct processes to broadcast all messages
+sleep $time_to_finish
+
+#stop all processes
+for i in `seq 1 5`
+do
+    if [ -n "${da_proc_id[$i]}" ]; then
+	kill -TERM "${da_proc_id[$i]}"
+    fi
+done
+
+#wait until all processes stop
+for i in `seq 1 5`
+do
+	wait "${da_proc_id[$i]}"
+done
+
+#check logs for correctness
+
+echo -e "\nTESTING PROCESS OUTPUT.\n"
+
+#check fifo for correct processes (2,3,4)
+python check_fifo.py da_proc_2.txt
+python check_fifo.py da_proc_3.txt
+python check_fifo.py da_proc_4.txt
+
+#check no duplication for faulty
+python check_no_duplication_incorrect_proc.py da_proc_1.txt
+python check_no_duplication_incorrect_proc.py da_proc_5.txt
+
+
+echo "Correctness test done."
+echo "The test contained 5 processes;"
+echo "..."
+echo "...;"
+echo "broadcasting 5 messages each."
+
+# copy to separate directory
+rm -r test_3_correctness
+mkdir test_3_correctness
+for i in `seq 1 5`; do
+	cp da_proc_${i}.txt test_3_correctness
+	rm da_proc_${i}.txt
+done
+cp fifo_results.txt test_3_correctness
+cp no_duplication_incorrect_proc_results.txt test_3_correctness
+#rm fifo_results.txt
+#rm no_duplication_incorrect_proc_results.txt
+
+echo "Back-up directory of logs created."

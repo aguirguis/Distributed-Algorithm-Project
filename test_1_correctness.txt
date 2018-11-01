@@ -1,0 +1,113 @@
+#!/bin/bash
+#
+# This is a test for 9 correct processes
+#
+############################################
+
+#time to wait for correct processes to broadcast all messages (in seconds)
+#(should be adapted to the number of messages to send)
+time_to_finish=200
+
+init_time=2
+
+#configure lossy network simulation
+sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25% 50%
+
+rm membership
+echo "9
+1 127.0.0.1 50500
+2 127.0.0.1 50501
+3 127.0.0.1 50502
+4 127.0.0.1 50503
+5 127.0.0.1 50504
+6 127.0.0.1 50505
+7 127.0.0.1 50506
+8 127.0.0.1 50507
+9 127.0.0.1 50508" >> membership
+
+#start 9 processes, each broadcasting 5 messages
+for i in `seq 1 9`
+do
+    ./da_proc $i membership 5 &
+    da_proc_id[$i]=$!
+done
+
+#leave some time for process initialization
+sleep $init_time
+
+#do some nasty stuff like process crashes and delays
+#example:
+#kill -STOP "${da_proc_id[1]}" #pause process 1
+#sleep 0.5
+#kill -STOP "${da_proc_id[3]}" #pause process 3
+#sleep 1
+#kill -TERM "${da_proc_id[2]}" #crash process 2
+#da_proc_id[2]=""
+#kill -CONT "${da_proc_id[3]}" #resume process 3
+
+#start broadcasting
+for i in `seq 1 9`
+do
+    if [ -n "${da_proc_id[$i]}" ]; then
+	kill -USR1 "${da_proc_id[$i]}"
+    fi
+done
+
+#do some more nasty stuff
+#example:
+#kill -TERM "${da_proc_id[4]}" #crash process 4
+#da_proc_id[4]=""
+#kill -CONT "${da_proc_id[1]}" #resume process 1
+
+#leave some time for the correct processes to broadcast all messages
+sleep $time_to_finish
+
+#stop all processes
+for i in `seq 1 9`
+do
+    if [ -n "${da_proc_id[$i]}" ]; then
+	kill -TERM "${da_proc_id[$i]}"
+    fi
+done
+
+#wait until all processes stop
+for i in `seq 1 9`
+do
+	wait "${da_proc_id[$i]}"
+done
+
+#check logs for correctness
+
+echo -e "\nTESTING PROCESS OUTPUT.\n"
+
+for i in `seq 1 9`; do
+	#filename = "da_proc_${i}.txt"
+	echo "Checking file da_proc_${i}.txt."
+	python check_fifo.py da_proc_${i}.txt
+	python check_no_duplication_incorrect_proc.py da_proc_${i}.txt
+	if [ $? -ne 0 ]; then
+		echo "Error in file da_proc_${i}.txt."
+		echo -e "\nTEST FAILED.\n"
+		exit 1
+	fi
+	shift
+done
+
+echo -e "\nTEST SUCCEDED.\n"
+
+
+echo "Correctness test done."
+echo "The test contained 9 correct processes"
+echo "broadcasting 5 messages each."
+
+# copy to separate directory
+rm -r test_1_correctness
+mkdir test_1_correctness
+cp da_proc_* test_1_correctness
+cp fifo_results.txt test_1_correctness
+cp no_duplication_incorrect_proc_results.txt test_1_correctness
+rm da_proc_*
+rm fifo_results.txt
+rm no_duplication_incorrect_proc_results.txt
+
+echo "Back-up directory of logs created."
