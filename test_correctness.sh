@@ -8,7 +8,7 @@
 
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
-time_to_finish=2
+time_to_finish=200
 
 init_time=2
 
@@ -19,16 +19,16 @@ sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25%
 make
 
 echo "5
-1 127.0.0.1 11001
-2 127.0.0.1 11002
-3 127.0.0.1 11003
-4 127.0.0.1 11004
-5 127.0.0.1 11005" > membership
+1 127.0.0.1 21001
+2 127.0.0.1 21002
+3 127.0.0.1 21003
+4 127.0.0.1 21004
+5 127.0.0.1 21005" > membership
 
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`
 do
-    ./da_proc $i membership 10 &
+    ./da_proc $i membership 400 &
     da_proc_id[$i]=$!
 done
 
@@ -55,9 +55,9 @@ done
 #example:
 kill -TERM "${da_proc_id[4]}" #crash process 4
 da_proc_id[4]=""
-kill -STOP "${da_proc_id[1]}" #pause process 1
-sleep 5
-kill -CONT "${da_proc_id[1]}" #resume process 1
+#kill -STOP "${da_proc_id[1]}" #pause process 1
+#sleep 5
+#kill -CONT "${da_proc_id[1]}" #resume process 1
 
 #leave some time for the correct processes to broadcast all messages
 sleep $time_to_finish

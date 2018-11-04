@@ -36,7 +36,7 @@ void beb::bebBroadcast(Message message) {
 }
 
 void beb::beb_deliver(Message message) {
-	log_m.lock();
+//	log_m.lock();
 	LogMessage lm;
 	lm.message_type='d';
 	lm.sender = message.initial_sender;
@@ -45,7 +45,7 @@ void beb::beb_deliver(Message message) {
 	log_pointer++;
 	if(log_pointer == MAX_LOG_FILE)
 		write_log();
-	log_m.unlock();
+//	log_m.unlock();
 }
 
 void beb::deliver(Message message) {

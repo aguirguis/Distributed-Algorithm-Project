@@ -79,18 +79,18 @@ void perfect_link::deliver(deliver_callback *bclass) {
 		ac.num = mc.num;
 		for(int i=0;i<mc.num;i++){
 			Message message = mc.c[i];
-			del_m.lock();
+//			del_m.lock();
 			bool is_delivered = std::find(delivered.begin(), delivered.end(), message) != delivered.end();
-			del_m.unlock();
+//			del_m.unlock();
 			if(!is_delivered) {
 				// deliver the received message
 				assert (bclass != NULL);
 				bclass -> deliver(message);
 
 				// add to delivered
-				del_m.lock();
+//				del_m.lock();
 				delivered.push_back(message);
-				del_m.unlock();
+//				del_m.unlock();
 			}
 			ack_message ack_m;
 			ack_m.acking_process = my_process_id;
