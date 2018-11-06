@@ -19,11 +19,11 @@ sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25%
 make
 
 echo "5
-1 127.0.0.1 21001
-2 127.0.0.1 21002
-3 127.0.0.1 21003
-4 127.0.0.1 21004
-5 127.0.0.1 21005" > membership
+1 127.0.0.1 51001
+2 127.0.0.1 51002
+3 127.0.0.1 51003
+4 127.0.0.1 51004
+5 127.0.0.1 51005" > membership
 
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`

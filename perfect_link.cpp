@@ -52,7 +52,8 @@ void perfect_link::send(int to) {
 //		else
 //			printf("Process %d sends container of %d messages to %d \n", my_process_id, mc.num, to);
 	send_sock_m.unlock();
-	for(Message message: mc.c) {
+	for(int i = 0; i < mc.num; i++){
+		Message message = mc.c[i];
 		un_acked_messages_m.lock();
 			un_acked_messages[to - 1].push_back(message);
 		un_acked_messages_m.unlock();
