@@ -8,6 +8,12 @@
 
 using namespace std;
 
+#define MAX_PROCESSES_NUM 10
+#define MAX_MESSAGE_NUM 10000
+#define MSG_LEN 64
+#define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
+#define MAX_CONTAINER_NUM 10
+
 struct Message {
     int seq_no;
     int sender;				//last hop = immediate sender
@@ -23,7 +29,7 @@ struct Message {
 };
 
 struct m_container{
-	Message c[10];
+	Message c[MAX_CONTAINER_NUM];
 	int num;
 };
 
@@ -37,7 +43,7 @@ struct ack_message {
 };
 
 struct ack_container{
-	ack_message a[10];
+	ack_message a[MAX_CONTAINER_NUM];
 	int num;
 };
 
@@ -88,11 +94,6 @@ struct ProcessComp
         return (prcs1.id < prcs2.id) || ((!(prcs2.id < prcs1.id)));
     }
 };
-
-#define MAX_PROCESSES_NUM 10
-#define MAX_MESSAGE_NUM 10000
-#define MSG_LEN 64
-#define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
 
 extern int nb_of_processes;
 extern Process processes[MAX_PROCESSES_NUM];

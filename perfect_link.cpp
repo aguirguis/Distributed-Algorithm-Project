@@ -27,7 +27,7 @@ void perfect_link::send(int to) {
 	m_container mc;
 	if (!this->messages_all[to - 1].empty()) {
 		mc.num=0;
-		while((!this->messages_all[to - 1].empty()) && (mc.num<10)){
+		while((!this->messages_all[to - 1].empty()) && (mc.num<MAX_CONTAINER_NUM)){
 			Message message = this->messages_all[to - 1].front();
 			message.sender = my_process_id;
 			mc.c[mc.num] = message;
@@ -45,7 +45,7 @@ void perfect_link::send(int to) {
 	socklen_t addr_receiver_size = sizeof(addr_receiver);
 	int s;
 	send_sock_m.lock();
-		if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
+		if(!(s = sendto(send_sock_all, (const char *)&mc, MAX_CONTAINER_NUM*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 		{
 			printf("Sending message through the socket was not successful\n");
 		}
@@ -105,7 +105,7 @@ void perfect_link::deliver(deliver_callback *bclass) {
 		}//end for loop
                 addr_sender.sin_port = htons(processes[mc.c[0].sender - 1].port + 800);
                 send_sock_m.lock();
-                int a = sendto(send_sock_all, (const char *)&ac, ac.num*sizeof(ack_message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
+                int a = sendto(send_sock_all, (const char *)&ac, MAX_CONTAINER_NUM*sizeof(ack_message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
                 send_sock_m.unlock();
 	}//end while True
 }
@@ -153,9 +153,9 @@ void perfect_link::resend() {
 				for(Message message : un_acked_messages[i]) {
 					mc.c[mc.num] = message;
 					mc.num++;
-					if(mc.num >= 10) {
+					if(mc.num >= MAX_CONTAINER_NUM) {
 						send_sock_m.lock();
-							if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
+							if(!(s = sendto(send_sock_all, (const char *)&mc, MAX_CONTAINER_NUM*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 							{
 								printf("Sending message through the socket was not successful\n");
 							}
@@ -165,7 +165,7 @@ void perfect_link::resend() {
 				}
 				if(mc.num != 0) {
 					send_sock_m.lock();
-						if(!(s = sendto(send_sock_all, (const char *)&mc, mc.num*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
+						if(!(s = sendto(send_sock_all, (const char *)&mc, MAX_CONTAINER_NUM*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 						{
 							printf("Sending message through the socket was not successful\n");
 						}
