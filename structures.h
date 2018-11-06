@@ -8,6 +8,12 @@
 
 using namespace std;
 
+#define MAX_PROCESSES_NUM 10
+#define MAX_MESSAGE_NUM 10000
+#define MSG_LEN 64
+#define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
+#define MAX_CONTAINER_NUM 10
+
 struct Message {
     int seq_no;
     int sender;				//last hop = immediate sender
@@ -16,26 +22,29 @@ struct Message {
 	{
 		return seq_no < m.seq_no;
 	}
-        bool operator ==(const Message & m) const
-        {
-                return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));
-        }
+    bool operator ==(const Message & m) const
+    {
+        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));
+    }
 };
 
 struct m_container{
-	Message c[10];
+	Message c[MAX_CONTAINER_NUM];
 	int num;
 };
 
 struct ack_message {
-    int seq_no;
     int acking_process;				//process to send the ack
-    int initial_sender;		//the sender of this message
-    int sender;
+    Message message;
 	bool operator ==(const ack_message & m) const
 	{
-		return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (acking_process == m.acking_process) && (sender == m.sender));
+		return ((acking_process == m.acking_process) && (message == m.message));
 	}
+};
+
+struct ack_container{
+	ack_message a[MAX_CONTAINER_NUM];
+	int num;
 };
 
 struct AckMessageComp
@@ -86,21 +95,18 @@ struct ProcessComp
     }
 };
 
-#define MAX_PROCESSES_NUM 10
-#define MAX_MESSAGE_NUM 10000
-#define MSG_LEN 64
-#define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
-
 extern int nb_of_processes;
-extern Process processes[MAX_PROCESSES_NUM + 1];
+extern Process processes[MAX_PROCESSES_NUM];
 
-extern std::vector<ack_message> acks;
+extern std::vector<Message> un_acked_messages[MAX_PROCESSES_NUM];
+extern std::mutex un_acked_messages_m;
 extern int my_process_id;
 extern string my_ip;
 extern int my_port;
 extern int recv_sock;
 extern int recvack_sock;
 extern int* send_sock;
+extern int send_sock_all; // TODO: added
 extern std::mutex log_m;
 extern LogMessage* messages_log;
 extern int log_pointer;

@@ -30,7 +30,18 @@ static void stop(int signum) {
 	//write/flush output file if necessary
 	printf("Writing output....number of lines in log: %d \n", log_pointer);
 	write_log();
-	out_file.close();
+
+
+	// close the sockets
+	if(signum == SIGTERM) {
+		int close1 = close(recv_sock);
+		assert(close1 >= 0);
+		int close2 = close(recvack_sock);
+		assert(close2 >= 0);
+		int close3 = close(send_sock_all);
+		assert(close3 >= 0);
+		out_file.close();
+	}
 
 	//exit directly from signal handler
 	exit(0);
@@ -68,7 +79,7 @@ beb test_bebBroadcast(){
 int main(int argc, char** argv) {
 
 	//set signal handlers
-	signal(SIGUSR1, start);
+	signal(SIGUSR2, start);
 	signal(SIGTERM, stop);
 	signal(SIGINT, stop);
 
@@ -87,7 +98,7 @@ int main(int argc, char** argv) {
 			membership >> processes[i].port;
 		}
 		//TODO: change to the required output name (.out)
-		out_file.open("da_proc_" + to_string(my_process_id) + ".txt");
+		out_file.open("da_proc_" + to_string(my_process_id) + ".out");
 	}
 	else {
 		printf("Fail To Open File");
@@ -127,33 +138,36 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	send_sock_all = socket(AF_INET, SOCK_DGRAM, 0);
+	assert(send_sock_all > 0);
+	struct sockaddr_in send_addr;
+	memset(&send_addr, 0, sizeof(send_addr));
+	socklen_t send_addr_size = sizeof(send_addr);
+	send_addr.sin_family = AF_INET;
+	send_addr.sin_port = htons(my_port + 1000);
+	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
+	if(bind(send_sock_all, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
+		printf("Fail to bind the sending socket of process %d \n", my_process_id);
+		exit(1);
+	}
+
 	// create the send socket that the process will be sending by. One sending socket per process
-	send_sock = new int[nb_of_processes];
-	for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
-		int sock = socket(AF_INET, SOCK_DGRAM, 0);
-		assert(sock > 0);
-		struct sockaddr_in send_addr;
-		memset(&send_addr, 0, sizeof(send_addr));
-		socklen_t send_addr_size = sizeof(send_addr);
-		send_addr.sin_family = AF_INET;
-		send_addr.sin_port = htons(my_port + 1000+i);
-		send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-		if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
-			printf("Fail to bind the sending socket of process %d \n", my_process_id);
-			exit(1);
-		}
-		send_sock[i] = sock;
-	}//end for
-
-	// test perfect links
-	//test_perfect_link();
-
-	//test bebBroadcast
-//	beb bb = test_bebBroadcast();
-
-	//test URB
-	 // urb ur;
-	 // ur.init(0);
+	// send_sock = new int[nb_of_processes];
+	// for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
+	// 	int sock = socket(AF_INET, SOCK_DGRAM, 0);
+	// 	assert(sock > 0);
+	// 	struct sockaddr_in send_addr;
+	// 	memset(&send_addr, 0, sizeof(send_addr));
+	// 	socklen_t send_addr_size = sizeof(send_addr);
+	// 	send_addr.sin_family = AF_INET;
+	// 	send_addr.sin_port = htons(my_port + 1000+i);
+	// 	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
+	// 	if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
+	// 		printf("Fail to bind the sending socket of process %d \n", my_process_id);
+	// 		exit(1);
+	// 	}
+	// 	send_sock[i] = sock;
+	// }//end for
 
 	// test frb_broadcast
 	frb fb;
@@ -176,33 +190,8 @@ int main(int argc, char** argv) {
 		}
 		fb.urb_instance.bbb.recv.join();
 		fb.urb_instance.bbb.recv_ack.join();
-		for(int i=0;i<nb_of_processes;i++){
-			fb.urb_instance.bbb.links[i].join();
-		}
-
-		// Message m1;
-		// m1.seq_no = 0;
-		// m1.initial_sender = my_process_id;
-		// bb.bebBroadcast(m1);
-		// sleep(10);
-		// Message m2;
-		// m2.seq_no = 1;
-		// m2.initial_sender = my_process_id;
-		// bb.bebBroadcast(m2);
-		// bb.recv.join();
-		//  Message m;
-		//  m.seq_no = 0;
-		//  m.initial_sender = my_process_id;
-		// // //bb.bebBroadcast(m);
-		// // //bb.recv.join();
-		//  ur.urbBroadcast(m);
-		//
-		//  Message m2;
-		//  m2.seq_no = 1;
-		//  m2.initial_sender = my_process_id;
-		//  ur.urbBroadcast(m2);
-		//
-		//  ur.bbb.recv.join();
+		fb.urb_instance.bbb.resend.join();
+		fb.urb_instance.bbb.send.join();
 
 	 //wait until stopped
 	 while(1) {

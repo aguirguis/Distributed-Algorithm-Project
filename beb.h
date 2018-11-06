@@ -15,11 +15,11 @@
 class beb: public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
 
     public:
-		vector<std::thread> links;
-		perfect_link** pl;
-		perfect_link* recv_link;
+		perfect_link* pl;
 		std::thread recv;
 		std::thread recv_ack;
+        std::thread resend;
+        std::thread send;
 		deliver_callback* bclass;
 
 		void init(deliver_callback* bclass);

@@ -1,14 +1,12 @@
 #!/bin/bash
 #
-# Tests the correctness of the Uniform Reliable Broadcast application.
+# This is a test for 5 processes. 2 crash at start and one is paused for a long time.
 #
-# This is an example script that shows the general structure of the
-# test. The details and parameters of the actual test might differ.
-#
+############################################
 
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
-time_to_finish=3
+time_to_finish=2
 
 init_time=2
 
@@ -23,10 +21,10 @@ echo "5
 4 127.0.0.1 50503
 5 127.0.0.1 50504" >> membership
 
-#start 5 processes, each broadcasting 1000 messages
+#start 5 processes, each broadcasting 5 messages
 for i in `seq 1 5`
 do
-    ./da_proc $i membership 30 &
+    ./da_proc $i membership 10 &
     da_proc_id[$i]=$!
 done
 
@@ -34,28 +32,24 @@ done
 sleep $init_time
 
 #do some nasty stuff like process crashes and delays
-#example:
-kill -STOP "${da_proc_id[1]}" #pause process 1
-sleep 0.5
-kill -STOP "${da_proc_id[3]}" #pause process 3
-sleep 1
-kill -TERM "${da_proc_id[2]}" #crash process 2
+kill -TERM "${da_proc_id[1]}" # crash 1
+da_proc_id[1]=""
+kill -TERM "${da_proc_id[2]}" # crash 2
 da_proc_id[2]=""
-kill -CONT "${da_proc_id[3]}" #resume process 3
+kill -STOP "${da_proc_id[3]}" # pause 3
 
 #start broadcasting
 for i in `seq 1 5`
 do
     if [ -n "${da_proc_id[$i]}" ]; then
-	kill -USR1 "${da_proc_id[$i]}"
+	kill -USR2 "${da_proc_id[$i]}"
     fi
 done
 
-#do some more nasty stuff
-#example:
-kill -TERM "${da_proc_id[4]}" #crash process 4
-da_proc_id[4]=""
-kill -CONT "${da_proc_id[1]}" #resume process 1
+#sleep and wake up
+sleep 10
+kill -CONT "${da_proc_id[3]}" # resume 3
+
 
 #leave some time for the correct processes to broadcast all messages
 sleep $time_to_finish
@@ -75,6 +69,28 @@ do
 done
 
 #check logs for correctness
-#... (not implemented here)
+
+echo -e "\nTESTING PROCESS OUTPUT.\n"
+
+#for i in `seq 1 5`; do
+	#filename = "da_proc_${i}.txt"
+#	echo "Checking file da_proc_${i}.txt."
+#	python check_fifo.py da_proc_${i}.txt
+#	python check_no_duplication_incorrect_proc.py da_proc_${i}.txt
+#	if [ $? -ne 0 ]; then
+#		echo "Error in file da_proc_${i}.txt."
+#		echo -e "\nTEST FAILED.\n"
+#		#exit 1
+#	fi
+#	shift
+#done
+
+#echo -e "\nTEST SUCCEDED.\n"
+
 
 echo "Correctness test done."
+echo "The test contained 5 processes;"
+echo "1 and 2 crashed, and 3 paused at start,"
+echo "3 later resumed;"
+echo "broadcasting 5 messages each."
+
