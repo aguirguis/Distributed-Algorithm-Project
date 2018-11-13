@@ -8,7 +8,8 @@
 #include <fstream>
 #include <thread>         // std::thread
 #include <unistd.h>			//sleep
-#include "frb.h"
+// #include "frb.h"
+#include "lcb.h"
 using namespace std;
 
 static int wait_for_start = 1;
@@ -151,28 +152,6 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	// create the send socket that the process will be sending by. One sending socket per process
-	// send_sock = new int[nb_of_processes];
-	// for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
-	// 	int sock = socket(AF_INET, SOCK_DGRAM, 0);
-	// 	assert(sock > 0);
-	// 	struct sockaddr_in send_addr;
-	// 	memset(&send_addr, 0, sizeof(send_addr));
-	// 	socklen_t send_addr_size = sizeof(send_addr);
-	// 	send_addr.sin_family = AF_INET;
-	// 	send_addr.sin_port = htons(my_port + 1000+i);
-	// 	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-	// 	if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
-	// 		printf("Fail to bind the sending socket of process %d \n", my_process_id);
-	// 		exit(1);
-	// 	}
-	// 	send_sock[i] = sock;
-	// }//end for
-
-	// test frb_broadcast
-	frb fb;
-	fb.init(new pl_deliver_callback());
-
 	//  //wait until start signal
 	 while(wait_for_start) {
 	 	struct timespec sleep_time;
@@ -182,16 +161,31 @@ int main(int argc, char** argv) {
 	 }
 
 
-	 //broadcast messages
+	 //test lcb_broadcast
+	 lcb lcb_instance;
+	 lcb_instance.init();
 	 printf("Broadcasting messages at process %d.\n", my_process_id);
-	 	for(int i = 0; i < num_messages; i++) {
-			Message m;
-			fb.frb_broadcast(m);
-		}
-		fb.urb_instance.bbb.recv.join();
-		fb.urb_instance.bbb.recv_ack.join();
-		fb.urb_instance.bbb.resend.join();
-		fb.urb_instance.bbb.send.join();
+	 for(int i = 0; i < num_messages; i++) {
+		Message m;
+		lcb_instance.lcb_broadcast(m);
+	 }
+	 lcb_instance.urb_instance.bbb.recv.join();
+	 lcb_instance.urb_instance.bbb.recv_ack.join();
+	 lcb_instance.urb_instance.bbb.resend.join();
+	 lcb_instance.urb_instance.bbb.send.join();
+
+	// test frb_broadcast
+	// frb fb;
+	// fb.init(new pl_deliver_callback());
+	//  printf("Broadcasting messages at process %d.\n", my_process_id);
+	//  for(int i = 0; i < num_messages; i++) {
+	// 	Message m;
+	// 	fb.frb_broadcast(m);
+	// }
+	// fb.urb_instance.bbb.recv.join();
+	// fb.urb_instance.bbb.recv_ack.join();
+	// fb.urb_instance.bbb.resend.join();
+	// fb.urb_instance.bbb.send.join();
 
 	 //wait until stopped
 	 while(1) {

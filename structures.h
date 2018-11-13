@@ -18,13 +18,14 @@ struct Message {
     int seq_no;
     int sender;				//last hop = immediate sender
     int initial_sender;		//the initial sender
+    int* vector_clock;
 	bool operator <(const Message & m) const
 	{
 		return seq_no < m.seq_no;
 	}
     bool operator ==(const Message & m) const
     {
-        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));
+        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender) && (vector_clock == m.vector_clock));
     }
 };
 
@@ -128,5 +129,9 @@ class deliver_callback { // @suppress("Class has a virtual method and non-virtua
     public:
         virtual void deliver(Message) = 0;
 };
+
+
+// This is for the localized causal broadcast
+
 
 #endif /* STRUCTURES_H_ */

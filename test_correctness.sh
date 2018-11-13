@@ -8,6 +8,7 @@
 
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
+
 time_to_finish=2
 
 init_time=2
@@ -74,7 +75,7 @@ done
 for i in `seq 1 5`
 do
     if [ -n "${da_proc_id[$i]}" ]; then
-	    wait "${da_proc_id[$i]}"
+        wait "${da_proc_id[$i]}"
     fi
 done
 
