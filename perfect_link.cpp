@@ -80,34 +80,24 @@ void perfect_link::deliver(deliver_callback *bclass) {
 		ac.num = mc.num;
 		for(int i=0;i<mc.num;i++){
 			Message message = mc.c[i];
-//			del_m.lock();
 			bool is_delivered = std::find(delivered.begin(), delivered.end(), message) != delivered.end();
-//			del_m.unlock();
 			if(!is_delivered) {
 				// deliver the received message
 				assert (bclass != NULL);
 				bclass -> deliver(message);
 
 				// add to delivered
-//				del_m.lock();
 				delivered.push_back(message);
-//				del_m.unlock();
 			}
 			ack_message ack_m;
 			ack_m.acking_process = my_process_id;
 			ack_m.message = message;
 			ac.a[i] = ack_m;
-//			addr_sender.sin_port = htons(processes[message.sender - 1].port + 800);
-//			send_sock_m.lock();
-//				int a = sendto(send_sock_all, (const char *)&ack_m, 16, MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
-//			send_sock_m.unlock();
-			// assert(a>0);
-//			usleep(1000);
 		}//end for loop
-                addr_sender.sin_port = htons(processes[mc.c[0].sender - 1].port + 800);
-                send_sock_m.lock();
-                int a = sendto(send_sock_all, (const char *)&ac, MAX_CONTAINER_NUM*sizeof(ack_message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
-                send_sock_m.unlock();
+        addr_sender.sin_port = htons(processes[mc.c[0].sender - 1].port + 800);
+        send_sock_m.lock();
+        int a = sendto(send_sock_all, (const char *)&ac, MAX_CONTAINER_NUM*sizeof(ack_message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_sender, addr_sender_size);
+        send_sock_m.unlock();
 	}//end while True
 }
 
@@ -125,8 +115,7 @@ void perfect_link::recv_ack(){
 			ack_message ack = ac.a[i];
 			int to = ack.acking_process;
 			un_acked_messages_m.lock();
-			std::vector<Message> msg_vector = un_acked_messages[to - 1];
-			msg_vector.erase(std::remove(msg_vector.begin(), msg_vector.end(), ack.message), msg_vector.end());
+			un_acked_messages[to - 1].erase(std::remove(un_acked_messages[to - 1].begin(), un_acked_messages[to - 1].end(), ack.message), un_acked_messages[to - 1].end());
 			un_acked_messages_m.unlock();
 		}//end for loop
 	}//end while true
