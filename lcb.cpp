@@ -27,7 +27,7 @@ void lcb::lcb_broadcast(Message message) {
 }
 
 void lcb::lcb_deliver(Message message) {
-    pending[0].push_back(message);
+    pending[0].push_front(message);
     pending[0].sort(MessageLCBComp());
 
     std::list<Message>::iterator message_iterator = pending[0].begin();

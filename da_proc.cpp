@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <thread>         // std::thread
 #include <unistd.h>			//sleep
 // #include "frb.h"
@@ -93,12 +94,22 @@ int main(int argc, char** argv) {
 	printf("Initializing at process %d.\n", my_process_id);
 	if(membership.is_open()) {
 		membership >> nb_of_processes;
+		// read each process information
 		for(int i = 0; i < nb_of_processes; i++) {
 			membership >> processes[i].id;
 			membership >> processes[i].ip;
 			membership >> processes[i].port;
 		}
-		//TODO: change to the required output name (.out)
+		// read each process dependencies
+		std::string line;
+		int n;
+		std::getline(membership, line); // this is placed to read the end of line
+		for(int i = 0; i < nb_of_processes; i++) {
+			std::getline(membership, line);
+			std::istringstream iss(line);
+			while (iss >> n)
+    			processes_dependencies[i].push_back(n);
+		}
 		out_file.open("da_proc_" + to_string(my_process_id) + ".out");
 	}
 	else {
@@ -112,6 +123,7 @@ int main(int argc, char** argv) {
 	membership.close();
 	my_ip = processes[my_process_id - 1].ip;
 	my_port = processes[my_process_id - 1].port;
+	my_dependencies = processes_dependencies[my_process_id -1];
 	// create the recv socket that the process will be listening on
 	recv_sock = socket(AF_INET, SOCK_DGRAM, 0);
 	assert(recv_sock > 0);

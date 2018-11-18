@@ -19,3 +19,5 @@ ofstream out_file;
 std::vector<Message> un_acked_messages[MAX_PROCESSES_NUM];
 std::mutex un_acked_messages_m;
 int send_sock_all;
+std::vector<int> processes_dependencies[MAX_PROCESSES_NUM];
+std::vector<int> my_dependencies;

@@ -114,6 +114,8 @@ extern std::mutex log_m;
 extern LogMessage* messages_log;
 extern int log_pointer;
 extern ofstream out_file;
+extern std::vector<int> processes_dependencies[MAX_PROCESSES_NUM];
+extern std::vector<int> my_dependencies;
 
 //This function writes the logs received to the log file
 static void write_log(){
