@@ -18,14 +18,16 @@ struct Message {
     int seq_no;
     int sender;				//last hop = immediate sender
     int initial_sender;		//the initial sender
-    int* vector_clock;
-	bool operator <(const Message & m) const
+    // TODO: try to find a way to assign the size on creating the message (note: int* does not work
+    // since sending the message will send only the memory address without the content causing segmentation fault)
+    int vector_clock[MAX_PROCESSES_NUM];
+    bool operator <(const Message & m) const
 	{
 		return seq_no < m.seq_no;
 	}
     bool operator ==(const Message & m) const
     {
-        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender) && (vector_clock == m.vector_clock));
+        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));// && (vector_clock == m.vector_clock));
     }
 };
 
