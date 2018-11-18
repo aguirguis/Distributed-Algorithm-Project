@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 	membership.close();
 	my_ip = processes[my_process_id - 1].ip;
 	my_port = processes[my_process_id - 1].port;
-	my_dependencies = processes_dependencies[my_process_id -1];
+	my_dependencies = processes_dependencies[my_process_id - 1];
 	// create the recv socket that the process will be listening on
 	recv_sock = socket(AF_INET, SOCK_DGRAM, 0);
 	assert(recv_sock > 0);

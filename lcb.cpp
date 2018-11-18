@@ -8,7 +8,15 @@ void lcb::init() {
 
 void lcb::lcb_broadcast(Message message) {
     // update message details
-    std::copy(std::begin(vector_clock), std::end(vector_clock), std::begin(message.vector_clock));
+    // std::copy(std::begin(vector_clock), std::end(vector_clock), std::begin(message.vector_clock));
+    // TODO: update so that a process only sends the entries of it's dependencies
+    for(int i = 0; i < nb_of_processes; i++) {
+        bool is_dependency = (std::find(my_dependencies.begin(), my_dependencies.end(), processes[i].id) != my_dependencies.end());
+        if(is_dependency)
+            message.vector_clock[i] = vector_clock[i];
+        else
+            message.vector_clock[i] = 0;
+    }
     message.seq_no = ++vector_clock[my_process_id - 1]; // TODO: check if this is correct
     message.sender = my_process_id;
     message.initial_sender = my_process_id;
@@ -27,7 +35,7 @@ void lcb::lcb_broadcast(Message message) {
 }
 
 void lcb::lcb_deliver(Message message) {
-    pending[0].push_front(message);
+    pending[0].push_back(message);
     pending[0].sort(MessageLCBComp());
 
     std::list<Message>::iterator message_iterator = pending[0].begin();
