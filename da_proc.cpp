@@ -164,6 +164,12 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	lcb lcb_instance;
+	lcb_instance.init();
+
+	// frb fb;
+	// fb.init(new pl_deliver_callback());
+
 	//  //wait until start signal
 	 while(wait_for_start) {
 	 	struct timespec sleep_time;
@@ -174,8 +180,6 @@ int main(int argc, char** argv) {
 
 
 	 //test lcb_broadcast
-	 lcb lcb_instance;
-	 lcb_instance.init();
 	 printf("Broadcasting messages at process %d.\n", my_process_id);
 	 for(int i = 0; i < num_messages; i++) {
 		Message m;
@@ -187,8 +191,6 @@ int main(int argc, char** argv) {
 	 lcb_instance.urb_instance.bbb.send.join();
 
 	// test frb_broadcast
-	// frb fb;
-	// fb.init(new pl_deliver_callback());
 	//  printf("Broadcasting messages at process %d.\n", my_process_id);
 	//  for(int i = 0; i < num_messages; i++) {
 	// 	Message m;
