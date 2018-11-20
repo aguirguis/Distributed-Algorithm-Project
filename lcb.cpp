@@ -13,11 +13,14 @@ void lcb::lcb_broadcast(Message message) {
     for(int i = 0; i < nb_of_processes; i++) {
         bool is_dependency = (std::find(my_dependencies.begin(), my_dependencies.end(), processes[i].id) != my_dependencies.end());
         if(is_dependency)
-            message.vector_clock[i] = vector_clock[i];
+            if(my_process_id == processes[i].id)
+                message.vector_clock[i] = lsn;
+            else
+                message.vector_clock[i] = vector_clock[i];
         else
             message.vector_clock[i] = 0;
     }
-    message.seq_no = ++vector_clock[my_process_id - 1]; // TODO: check if this is correct
+    message.seq_no = ++lsn; // TODO: check if this is correct
     message.sender = my_process_id;
     message.initial_sender = my_process_id;
 
