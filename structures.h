@@ -12,7 +12,7 @@ using namespace std;
 #define MAX_MESSAGE_NUM 10000
 #define MSG_LEN 64
 #define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
-#define MAX_CONTAINER_NUM 10
+#define MAX_CONTAINER_NUM 50
 
 struct Message {
     int seq_no;

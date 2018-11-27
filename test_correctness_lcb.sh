@@ -9,8 +9,8 @@
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
 
-time_to_finish=120
-num_msgs=200
+time_to_finish=60
+num_msgs=700
 init_time=2
 
 #configure lossy network simulation
@@ -45,10 +45,12 @@ sleep $init_time
 #example:
 kill -TERM "${da_proc_id[5]}" #crash process 2
 da_proc_id[5]=""
+kill -TERM "${da_proc_id[4]}" #crash process 2
+da_proc_id[4]=""
 
 # start to broadcast in the following order
 kill -USR2 "${da_proc_id[3]}"
-kill -USR2 "${da_proc_id[4]}"
+#kill -USR2 "${da_proc_id[4]}"
 sleep 0.1
 kill -USR2 "${da_proc_id[1]}"
 sleep 0.1
@@ -58,7 +60,7 @@ kill -USR2 "${da_proc_id[2]}"
 #do some more nasty stuff
 #example:
 kill -STOP "${da_proc_id[1]}" #pause process 1
-sleep 5
+sleep 0.1
 kill -CONT "${da_proc_id[1]}" #resume process 1
 
 #leave some time for the correct processes to broadcast all messages
@@ -81,6 +83,6 @@ do
 done
 
 #check logs for correctness
-./check_output.sh 1 2 3 4
+./check_output.sh 1 2 3
 
 echo "Correctness test done."

@@ -67,16 +67,19 @@ void perfect_link::send(int to) {
 */
 void perfect_link::deliver(deliver_callback *bclass) {
 	cout << "PL: waiting to deliver some messages " << endl;
+        char buf[10000];
+        m_container mc;
+        ack_container ac;
 	while(1){	//always true, always waiting for messages to deliver
 		struct sockaddr_in addr_sender;
 		socklen_t addr_sender_size = sizeof(addr_sender);
-		char buf[1000];
-		m_container mc;
-		int r = recvfrom(recv_sock, &buf, 1000, MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
+//		char buf[10000];
+//		m_container mc;
+		int r = recvfrom(recv_sock, &buf, 10000, MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
 		memcpy(&mc, buf, r);
 		// check if message is already delivered
 //		printf("Process %d received a container of %d messages from %d \n", my_process_id, mc.num, mc.c[0].sender);
-		ack_container ac;
+//		ack_container ac;
 		ac.num = mc.num;
 		for(int i=0;i<mc.num;i++){
 			Message message = mc.c[i];
@@ -103,12 +106,13 @@ void perfect_link::deliver(deliver_callback *bclass) {
 
 // This method works in one separate threads to receive acks
 void perfect_link::recv_ack(){
+        char buf[10000];
+        ack_container ac;
 	while(true){
-		char buf[1000];
 		struct sockaddr_in addr_receiver;
 		socklen_t addr_receiver_size = sizeof(addr_receiver);
-		int r = recvfrom(recvack_sock, (char*) buf, 1000, MSG_WAITALL, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
-		ack_container ac;
+		int r = recvfrom(recvack_sock, (char*) buf, 10000, MSG_WAITALL, (struct sockaddr *) &addr_receiver, &addr_receiver_size);
+//		ack_container ac;
 		memcpy(&ac,buf,r);
 
 		for(int i=0;i<ac.num;i++){
@@ -124,6 +128,7 @@ void perfect_link::recv_ack(){
 
 // This method works in one separate threads to resend unacked messages
 void perfect_link::resend() {
+        m_container mc;
 	while(true) {
 //		usleep(1000);
 		for(int i = 0; i < nb_of_processes; i++) {
@@ -137,7 +142,7 @@ void perfect_link::resend() {
 				socklen_t addr_receiver_size = sizeof(addr_receiver);
 				int s;
 
-				m_container mc;
+//				m_container mc;
 				mc.num = 0;
 				// resend all messages that are remaind unacked
 				for(Message message : un_acked_messages[i]) {
