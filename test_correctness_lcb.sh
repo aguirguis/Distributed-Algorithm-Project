@@ -9,8 +9,8 @@
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
 
-time_to_finish=2
-
+time_to_finish=120
+num_msgs=200
 init_time=2
 
 #configure lossy network simulation
@@ -34,7 +34,7 @@ echo "5
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`
 do
-    ./da_proc $i membership 50 &
+    ./da_proc $i membership $num_msgs &
     da_proc_id[$i]=$!
 done
 
@@ -81,6 +81,6 @@ do
 done
 
 #check logs for correctness
-./check_output.sh 1 3 5
+./check_output.sh 1 2 3 4
 
 echo "Correctness test done."

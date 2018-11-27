@@ -13,7 +13,7 @@ void perfect_link::send_all() {
 				send(processes[i].id);
 			}
 		}
-		usleep(1000);
+		sleep(1);
 	}
 }
 /*
@@ -125,7 +125,7 @@ void perfect_link::recv_ack(){
 // This method works in one separate threads to resend unacked messages
 void perfect_link::resend() {
 	while(true) {
-		sleep(1);
+//		usleep(1000);
 		for(int i = 0; i < nb_of_processes; i++) {
 			if(!un_acked_messages[i].empty()) {
 
@@ -154,6 +154,7 @@ void perfect_link::resend() {
 					}
 				}
 				if(mc.num != 0) {
+//					usleep(1000);
 					send_sock_m.lock();
 						if(!(s = sendto(send_sock_all, (const char *)&mc, MAX_CONTAINER_NUM*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 						{

@@ -20,7 +20,7 @@ void urb::urbBroadcast(Message message) {
     // and put into the pending set
     message.sender = my_process_id;
 //    pen_m.lock();
-    pending.insert(message);
+    pending.push_back(message);
 //    pen_m.unlock();
     // since we did insert something in pending here,
     // we should probably check the condition
@@ -58,7 +58,7 @@ void urb::urb_deliver(Message message, int from) {
 //    it_m.unlock();
     if(notInPending) {
 //    	pen_m.lock();
-        pending.insert(message);
+        pending.push_back(message);
 //        pen_m.unlock();
         bbb.bebBroadcast(message);
     }
@@ -75,7 +75,7 @@ void urb::deliver(Message message) {
         if(candeliver(*it) && not_in_deliver(*it)) {
         	//concurrency with delivered may create problems
 //        	del_m.lock();
-            delivered.insert(*it);
+            delivered.push_back(*it);
 //            printf("Process %d deliver %d %d \n", my_process_id, (*it).initial_sender, (*it).seq_no);
 //            del_m.unlock();
 			if (frb_callback != NULL)
