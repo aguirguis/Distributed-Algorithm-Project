@@ -4,12 +4,13 @@ void lcb::init() {
     lsn = 0;
     pending = new std::list<Message>[1];
     urb_instance.init(this);
+    for(int i=0;i<MAX_PROCESSES_NUM;i++)
+	vector_clock[i] = 0;
 }
 
 void lcb::lcb_broadcast(Message message) {
     // update message details
     // std::copy(std::begin(vector_clock), std::end(vector_clock), std::begin(message.vector_clock));
-    // TODO: update so that a process only sends the entries of it's dependencies
     for(int i = 0; i < nb_of_processes; i++) {
         bool is_dependency = (std::find(my_dependencies.begin(), my_dependencies.end(), processes[i].id) != my_dependencies.end());
         if(is_dependency)
@@ -20,7 +21,7 @@ void lcb::lcb_broadcast(Message message) {
         else
             message.vector_clock[i] = 0;
     }
-    message.seq_no = ++lsn; // TODO: check if this is correct
+    message.seq_no = ++lsn;
     message.sender = my_process_id;
     message.initial_sender = my_process_id;
 

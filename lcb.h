@@ -32,7 +32,6 @@ static bool compare_vector_clocks(int v1[], int v2[]) {
 }
 
 struct MessageLCBComp {
-    // TODO: update this for the localized causal broadcast
     bool operator ()(const Message & m1, const Message & m2) {
         for(int i = 0; i < nb_of_processes; i++) {
             if(m1.vector_clock[i] > m2.vector_clock[i]) {
