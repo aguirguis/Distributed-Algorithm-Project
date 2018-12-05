@@ -186,6 +186,9 @@ int main(int argc, char** argv) {
 	 //test lcb_broadcast
 	 printf("Broadcasting messages at process %d.\n", my_process_id);
 	 for(int i = 0; i < num_messages; i++) {
+		//Hack to test causal order property
+//		if(my_process_id == 4 && i == 100)
+//			sleep(5);
 		Message m;
 		lcb_instance.lcb_broadcast(m);
 	 }

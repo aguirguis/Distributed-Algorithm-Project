@@ -7,12 +7,14 @@
 using namespace std;
 
 void perfect_link::send_all() {
+	int count = 0;
 	while(true) {
 		for(int i = 0; i < nb_of_processes; i++) {
 			if(processes[i].id != my_process_id) {
 				send(processes[i].id);
 			}
 		}
+//		printf("Process %d send something at round %d\n", my_process_id, count++);
 		sleep(1);
 	}
 }
@@ -24,14 +26,16 @@ void perfect_link::send_all() {
 */
 void perfect_link::send(int to) {
     // printf("Starting PL thread..waiting for message to send to %d\n", to);
-	m_container mc;
+	m_container* mc = new m_container();
 	if (!this->messages_all[to - 1].empty()) {
-		mc.num=0;
-		while((!this->messages_all[to - 1].empty()) && (mc.num<MAX_CONTAINER_NUM)){
+		mc->num=0;
+		while((!this->messages_all[to - 1].empty()) && (mc->num<MAX_CONTAINER_NUM)){
 			Message message = this->messages_all[to - 1].front();
 			message.sender = my_process_id;
-			mc.c[mc.num] = message;
-			mc.num++;
+			mc->c[mc->num] = message;
+			if(mc->c[mc->num].seq_no == 0)
+				printf("How am I going to send a message of seq_no == 0?! index %d \n", my_process_id);
+			mc->num++;
 			this->messages_all[to - 1].pop();
 		}
 	}
@@ -45,19 +49,20 @@ void perfect_link::send(int to) {
 	socklen_t addr_receiver_size = sizeof(addr_receiver);
 	int s;
 	send_sock_m.lock();
-		if(!(s = sendto(send_sock_all, (const char *)&mc, MAX_CONTAINER_NUM*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
+		if(!(s = sendto(send_sock_all, (const char *)mc, MAX_CONTAINER_NUM*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 		{
 			printf("Sending message through the socket was not successful\n");
 		}
 //		else
 //			printf("Process %d sends container of %d messages to %d \n", my_process_id, mc.num, to);
 	send_sock_m.unlock();
-	for(int i = 0; i < mc.num; i++){
-		Message message = mc.c[i];
+	for(int i = 0; i < mc->num; i++){
+		Message message = mc->c[i];
 		un_acked_messages_m.lock();
-			un_acked_messages[to - 1].push_back(message);
+		un_acked_messages[to - 1].push_back(message);
 		un_acked_messages_m.unlock();
 	}
+//	delete mc;
 }
 
 /*
@@ -88,7 +93,7 @@ void perfect_link::deliver(deliver_callback *bclass) {
 				// deliver the received message
 				assert (bclass != NULL);
 				if(message.seq_no == 0)
-					printf("=====FLAG====== seq no == 0 in deliver!!\n");
+					printf("=====FLAG====== seq no == 0 in deliver!!..this is at index %d and from %d \n", my_process_id, message.sender);
 				bclass -> deliver(message);
 
 				// add to delivered

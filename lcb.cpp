@@ -24,7 +24,7 @@ void lcb::lcb_broadcast(Message message) {
     message.seq_no = ++lsn;
     message.sender = my_process_id;
     message.initial_sender = my_process_id;
-
+    assert(message.seq_no > 0);
     // save to log
     LogMessage lm;
     lm.message_type='b';

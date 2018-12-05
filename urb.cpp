@@ -65,7 +65,8 @@ void urb::urb_deliver(Message message, int from) {
 }
 
 void urb::deliver(Message message) {
-
+	if(message.seq_no == 0)
+		return;
     urb_deliver(message, message.sender);
 
     // upon exists
@@ -96,7 +97,7 @@ bool urb::candeliver(Message message) {
     // calculate the number of acks for this message
 //	ack_m.lock();
 	if(message.seq_no == 0)
-		printf("Message has seq_no == 0 in candeliver!! \n");
+		printf("Message has seq_no == 0 in candeliver!! at index %d \n", my_process_id);
     int nAcks = (ack[message.initial_sender][message.seq_no]).size();
 //    ack_m.unlock();
     // return statement whether majority or not
