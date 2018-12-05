@@ -51,6 +51,8 @@ void lcb::lcb_deliver(Message message) {
             vector_clock[(message_iterator -> initial_sender) - 1]++;
 
             // deliver the message
+		if(message_iterator->seq_no == 0)
+			printf("seq no = 0 in LCB !! Check \n");
             urb_instance.bbb.deliver(*message_iterator);
 
             // erase the message

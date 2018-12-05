@@ -20,7 +20,10 @@ static int wait_for_start = 1;
 static void start(int signum) {
 	wait_for_start = 0;
 }
-
+static void segcatch(int signum) {
+	signal(SIGSEGV, SIG_DFL);
+	exit(0);
+}
 static void stop(int signum) {
 	//reset signal handlers to default
 	signal(SIGTERM, SIG_DFL);
@@ -84,6 +87,7 @@ int main(int argc, char** argv) {
 	signal(SIGUSR2, start);
 	signal(SIGTERM, stop);
 	signal(SIGINT, stop);
+	signal(SIGSEGV, segcatch);
 
 
 	//parse arguments, including membership
@@ -185,10 +189,10 @@ int main(int argc, char** argv) {
 		Message m;
 		lcb_instance.lcb_broadcast(m);
 	 }
-	 lcb_instance.urb_instance.bbb.recv.join();
-	 lcb_instance.urb_instance.bbb.recv_ack.join();
-	 lcb_instance.urb_instance.bbb.resend.join();
-	 lcb_instance.urb_instance.bbb.send.join();
+//	 lcb_instance.urb_instance.bbb.recv.join();
+//	 lcb_instance.urb_instance.bbb.recv_ack.join();
+//	 lcb_instance.urb_instance.bbb.resend.join();
+//	 lcb_instance.urb_instance.bbb.send.join();
 
 	// test frb_broadcast
 	//  printf("Broadcasting messages at process %d.\n", my_process_id);

@@ -9,8 +9,8 @@
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
 
-time_to_finish=60
-num_msgs=700
+time_to_finish=150
+num_msgs=1000
 init_time=2
 
 #configure lossy network simulation

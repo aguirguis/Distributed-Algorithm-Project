@@ -78,9 +78,11 @@ void urb::deliver(Message message) {
             delivered.push_back(*it);
 //            printf("Process %d deliver %d %d \n", my_process_id, (*it).initial_sender, (*it).seq_no);
 //            del_m.unlock();
-			if (frb_callback != NULL)
+			if (frb_callback != NULL){
+				if((*it).seq_no == 0)
+					printf("seq no == 0 in URB deliver!\n");
 				frb_callback -> deliver(*it);
-			else
+			}else
 	            bbb.beb_deliver(*it);
         }
         it++;
@@ -93,6 +95,8 @@ void urb::deliver(Message message) {
 bool urb::candeliver(Message message) {
     // calculate the number of acks for this message
 //	ack_m.lock();
+	if(message.seq_no == 0)
+		printf("Message has seq_no == 0 in candeliver!! \n");
     int nAcks = (ack[message.initial_sender][message.seq_no]).size();
 //    ack_m.unlock();
     // return statement whether majority or not

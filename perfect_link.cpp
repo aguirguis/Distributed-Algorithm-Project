@@ -87,6 +87,8 @@ void perfect_link::deliver(deliver_callback *bclass) {
 			if(!is_delivered) {
 				// deliver the received message
 				assert (bclass != NULL);
+				if(message.seq_no == 0)
+					printf("=====FLAG====== seq no == 0 in deliver!!\n");
 				bclass -> deliver(message);
 
 				// add to delivered
