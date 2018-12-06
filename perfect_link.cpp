@@ -93,7 +93,7 @@ void perfect_link::deliver(deliver_callback *bclass) {
 				// deliver the received message
 				assert (bclass != NULL);
 				if(message.seq_no == 0)
-					printf("=====FLAG====== seq no == 0 in deliver!!..this is at index %d and from %d \n", my_process_id, message.sender);
+					printf("=====FLAG====== seq no == 0 in deliver!!..this is at index %d and from %d Message %d/%d \n", my_process_id, message.sender, i, mc.num);
 				bclass -> deliver(message);
 
 				// add to delivered

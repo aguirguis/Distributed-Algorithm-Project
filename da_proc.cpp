@@ -36,17 +36,13 @@ static void stop(int signum) {
 	printf("Writing output....number of lines in log: %d \n", log_pointer);
 	write_log();
 
-
 	// close the sockets
-	if(signum == SIGTERM) {
-		int close1 = close(recv_sock);
-		assert(close1 >= 0);
-		int close2 = close(recvack_sock);
-		assert(close2 >= 0);
-		int close3 = close(send_sock_all);
-		assert(close3 >= 0);
+	int close_sock = close(send_sock_all);
+	assert(close_sock >= 0);
+        close_sock = close(recvack_sock);
+        assert(close_sock >= 0);
+	if(out_file && out_file.is_open())
 		out_file.close();
-	}
 
 	//exit directly from signal handler
 	exit(0);
@@ -215,5 +211,4 @@ int main(int argc, char** argv) {
 	 	sleep_time.tv_nsec = 0;
 	 	nanosleep(&sleep_time, NULL);
 	 }
-	out_file.close();
 }

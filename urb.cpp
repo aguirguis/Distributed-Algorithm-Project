@@ -85,8 +85,12 @@ void urb::deliver(Message message) {
 				frb_callback -> deliver(*it);
 			}else
 	            bbb.beb_deliver(*it);
+		pen_m.lock();
+		it = pending.erase(it);
+		pen_m.unlock();
         }
-        it++;
+	else
+	        it++;
     }
 //    it_m.unlock();
 }
