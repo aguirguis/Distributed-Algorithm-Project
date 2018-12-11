@@ -20,7 +20,7 @@ void urb::urbBroadcast(Message message) {
     // and put into the pending set
     message.sender = my_process_id;
 //    pen_m.lock();
-    pending.insert(message);
+    pending.push_back(message);
 //    pen_m.unlock();
     // since we did insert something in pending here,
     // we should probably check the condition
@@ -58,14 +58,15 @@ void urb::urb_deliver(Message message, int from) {
 //    it_m.unlock();
     if(notInPending) {
 //    	pen_m.lock();
-        pending.insert(message);
+        pending.push_back(message);
 //        pen_m.unlock();
         bbb.bebBroadcast(message);
     }
 }
 
 void urb::deliver(Message message) {
-
+	if(message.seq_no == 0)
+		return;
     urb_deliver(message, message.sender);
 
     // upon exists
@@ -75,15 +76,21 @@ void urb::deliver(Message message) {
         if(candeliver(*it) && not_in_deliver(*it)) {
         	//concurrency with delivered may create problems
 //        	del_m.lock();
-            delivered.insert(*it);
+            delivered.push_back(*it);
 //            printf("Process %d deliver %d %d \n", my_process_id, (*it).initial_sender, (*it).seq_no);
 //            del_m.unlock();
-			if (frb_callback != NULL)
+			if (frb_callback != NULL){
+				if((*it).seq_no == 0)
+					printf("seq no == 0 in URB deliver!\n");
 				frb_callback -> deliver(*it);
-			else
+			}else
 	            bbb.beb_deliver(*it);
+		pen_m.lock();
+		it = pending.erase(it);
+		pen_m.unlock();
         }
-        it++;
+	else
+	        it++;
     }
 //    it_m.unlock();
 }
@@ -93,6 +100,8 @@ void urb::deliver(Message message) {
 bool urb::candeliver(Message message) {
     // calculate the number of acks for this message
 //	ack_m.lock();
+	if(message.seq_no == 0)
+		printf("Message has seq_no == 0 in candeliver!! at index %d \n", my_process_id);
     int nAcks = (ack[message.initial_sender][message.seq_no]).size();
 //    ack_m.unlock();
     // return statement whether majority or not

@@ -6,9 +6,11 @@
 #include <sys/socket.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <thread>         // std::thread
 #include <unistd.h>			//sleep
-#include "frb.h"
+// #include "frb.h"
+#include "lcb.h"
 using namespace std;
 
 static int wait_for_start = 1;
@@ -18,7 +20,10 @@ static int wait_for_start = 1;
 static void start(int signum) {
 	wait_for_start = 0;
 }
-
+static void segcatch(int signum) {
+	signal(SIGSEGV, SIG_DFL);
+	exit(0);
+}
 static void stop(int signum) {
 	//reset signal handlers to default
 	signal(SIGTERM, SIG_DFL);
@@ -31,17 +36,13 @@ static void stop(int signum) {
 	printf("Writing output....number of lines in log: %d \n", log_pointer);
 	write_log();
 
-
 	// close the sockets
-	if(signum == SIGTERM) {
-		int close1 = close(recv_sock);
-		assert(close1 >= 0);
-		int close2 = close(recvack_sock);
-		assert(close2 >= 0);
-		int close3 = close(send_sock_all);
-		assert(close3 >= 0);
+	int close_sock = close(send_sock_all);
+	assert(close_sock >= 0);
+        close_sock = close(recvack_sock);
+        assert(close_sock >= 0);
+	if(out_file && out_file.is_open())
 		out_file.close();
-	}
 
 	//exit directly from signal handler
 	exit(0);
@@ -82,6 +83,7 @@ int main(int argc, char** argv) {
 	signal(SIGUSR2, start);
 	signal(SIGTERM, stop);
 	signal(SIGINT, stop);
+	signal(SIGSEGV, segcatch);
 
 
 	//parse arguments, including membership
@@ -92,12 +94,22 @@ int main(int argc, char** argv) {
 	printf("Initializing at process %d.\n", my_process_id);
 	if(membership.is_open()) {
 		membership >> nb_of_processes;
+		// read each process information
 		for(int i = 0; i < nb_of_processes; i++) {
 			membership >> processes[i].id;
 			membership >> processes[i].ip;
 			membership >> processes[i].port;
 		}
-		//TODO: change to the required output name (.out)
+		// read each process dependencies
+		std::string line;
+		int n;
+		std::getline(membership, line); // this is placed to read the end of line
+		for(int i = 0; i < nb_of_processes; i++) {
+			std::getline(membership, line);
+			std::istringstream iss(line);
+			while (iss >> n)
+    			processes_dependencies[i].push_back(n);
+		}
 		out_file.open("da_proc_" + to_string(my_process_id) + ".out");
 	}
 	else {
@@ -111,6 +123,7 @@ int main(int argc, char** argv) {
 	membership.close();
 	my_ip = processes[my_process_id - 1].ip;
 	my_port = processes[my_process_id - 1].port;
+	my_dependencies = processes_dependencies[my_process_id - 1];
 	// create the recv socket that the process will be listening on
 	recv_sock = socket(AF_INET, SOCK_DGRAM, 0);
 	assert(recv_sock > 0);
@@ -151,27 +164,11 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	// create the send socket that the process will be sending by. One sending socket per process
-	// send_sock = new int[nb_of_processes];
-	// for(int i = 0; i < nb_of_processes; i++) if(processes[i].id != my_process_id) {
-	// 	int sock = socket(AF_INET, SOCK_DGRAM, 0);
-	// 	assert(sock > 0);
-	// 	struct sockaddr_in send_addr;
-	// 	memset(&send_addr, 0, sizeof(send_addr));
-	// 	socklen_t send_addr_size = sizeof(send_addr);
-	// 	send_addr.sin_family = AF_INET;
-	// 	send_addr.sin_port = htons(my_port + 1000+i);
-	// 	send_addr.sin_addr.s_addr = inet_addr(my_ip.c_str());
-	// 	if(bind(sock, (const struct sockaddr *)&send_addr, send_addr_size) == SO_ERROR) {
-	// 		printf("Fail to bind the sending socket of process %d \n", my_process_id);
-	// 		exit(1);
-	// 	}
-	// 	send_sock[i] = sock;
-	// }//end for
+	lcb lcb_instance;
+	lcb_instance.init();
 
-	// test frb_broadcast
-	frb fb;
-	fb.init(new pl_deliver_callback());
+	// frb fb;
+	// fb.init(new pl_deliver_callback());
 
 	//  //wait until start signal
 	 while(wait_for_start) {
@@ -182,16 +179,30 @@ int main(int argc, char** argv) {
 	 }
 
 
-	 //broadcast messages
+	 //test lcb_broadcast
 	 printf("Broadcasting messages at process %d.\n", my_process_id);
-	 	for(int i = 0; i < num_messages; i++) {
-			Message m;
-			fb.frb_broadcast(m);
-		}
-		fb.urb_instance.bbb.recv.join();
-		fb.urb_instance.bbb.recv_ack.join();
-		fb.urb_instance.bbb.resend.join();
-		fb.urb_instance.bbb.send.join();
+	 for(int i = 0; i < num_messages; i++) {
+		//Hack to test causal order property
+//		if(my_process_id == 4 && i == 100)
+//			sleep(5);
+		Message m;
+		lcb_instance.lcb_broadcast(m);
+	 }
+//	 lcb_instance.urb_instance.bbb.recv.join();
+//	 lcb_instance.urb_instance.bbb.recv_ack.join();
+//	 lcb_instance.urb_instance.bbb.resend.join();
+//	 lcb_instance.urb_instance.bbb.send.join();
+
+	// test frb_broadcast
+	//  printf("Broadcasting messages at process %d.\n", my_process_id);
+	//  for(int i = 0; i < num_messages; i++) {
+	// 	Message m;
+	// 	fb.frb_broadcast(m);
+	// }
+	// fb.urb_instance.bbb.recv.join();
+	// fb.urb_instance.bbb.recv_ack.join();
+	// fb.urb_instance.bbb.resend.join();
+	// fb.urb_instance.bbb.send.join();
 
 	 //wait until stopped
 	 while(1) {
@@ -200,5 +211,4 @@ int main(int argc, char** argv) {
 	 	sleep_time.tv_nsec = 0;
 	 	nanosleep(&sleep_time, NULL);
 	 }
-	out_file.close();
 }

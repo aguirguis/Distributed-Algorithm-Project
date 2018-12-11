@@ -8,25 +8,33 @@
 
 #time to wait for correct processes to broadcast all messages (in seconds)
 #(should be adapted to the number of messages to send)
-time_to_finish=3
 
+time_to_finish=150	#150
+num_msgs=1000		#1000
 init_time=2
 
 #configure lossy network simulation
 sudo tc qdisc change dev lo root netem delay 50ms 200ms loss 10% 25% reorder 25% 50%
 
-rm membership
+# compile (should output: da_proc)
+make
+
 echo "5
-1 127.0.0.1 50500
-2 127.0.0.1 50501
-3 127.0.0.1 50502
-4 127.0.0.1 50503
-5 127.0.0.1 50504" >> membership
+1 127.0.0.1 11011
+2 127.0.0.1 11012
+3 127.0.0.1 11013
+4 127.0.0.1 11014
+5 127.0.0.1 11015
+1 4 5
+2 1
+3 1 2
+4 1 2
+5 3 4" > membership
 
 #start 5 processes, each broadcasting 1000 messages
 for i in `seq 1 5`
 do
-    ./da_proc $i membership 30 &
+    ./da_proc $i membership $num_msgs &
     da_proc_id[$i]=$!
 done
 
@@ -35,26 +43,25 @@ sleep $init_time
 
 #do some nasty stuff like process crashes and delays
 #example:
-kill -STOP "${da_proc_id[1]}" #pause process 1
-sleep 0.5
-kill -STOP "${da_proc_id[3]}" #pause process 3
-sleep 1
-kill -TERM "${da_proc_id[2]}" #crash process 2
-da_proc_id[2]=""
-kill -CONT "${da_proc_id[3]}" #resume process 3
+kill -TERM "${da_proc_id[5]}" #crash process 5
+da_proc_id[5]=""
+#kill -TERM "${da_proc_id[4]}" #crash process 4
+#da_proc_id[4]=""
 
-#start broadcasting
-for i in `seq 1 5`
-do
-    if [ -n "${da_proc_id[$i]}" ]; then
-	kill -USR1 "${da_proc_id[$i]}"
-    fi
-done
+# start to broadcast in the following order
+kill -USR2 "${da_proc_id[3]}"
+sleep 0.1
+kill -USR2 "${da_proc_id[4]}"
+sleep 0.1
+kill -USR2 "${da_proc_id[1]}"
+sleep 0.1
+kill -USR2 "${da_proc_id[2]}"
+
 
 #do some more nasty stuff
 #example:
-kill -TERM "${da_proc_id[4]}" #crash process 4
-da_proc_id[4]=""
+kill -STOP "${da_proc_id[1]}" #pause process 1
+sleep 0.1
 kill -CONT "${da_proc_id[1]}" #resume process 1
 
 #leave some time for the correct processes to broadcast all messages
@@ -67,14 +74,15 @@ do
 	kill -TERM "${da_proc_id[$i]}"
     fi
 done
-
 #wait until all processes stop
 for i in `seq 1 5`
 do
-	wait "${da_proc_id[$i]}"
+    if [ -n "${da_proc_id[$i]}" ]; then
+        wait "${da_proc_id[$i]}"
+    fi
 done
 
 #check logs for correctness
-#... (not implemented here)
+./check_output.sh 1 2 3 4
 
 echo "Correctness test done."

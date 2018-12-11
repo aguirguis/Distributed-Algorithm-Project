@@ -12,19 +12,22 @@ using namespace std;
 #define MAX_MESSAGE_NUM 10000
 #define MSG_LEN 64
 #define MAX_LOG_FILE 1000	//let's say after each 100 message, I will write to a file
-#define MAX_CONTAINER_NUM 10
+#define MAX_CONTAINER_NUM 50
 
 struct Message {
     int seq_no;
     int sender;				//last hop = immediate sender
     int initial_sender;		//the initial sender
-	bool operator <(const Message & m) const
+    // TODO: try to find a way to assign the size on creating the message (note: int* does not work
+    // since sending the message will send only the memory address without the content causing segmentation fault)
+    int vector_clock[MAX_PROCESSES_NUM];
+    bool operator <(const Message & m) const
 	{
 		return seq_no < m.seq_no;
 	}
     bool operator ==(const Message & m) const
     {
-        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));
+        return ((seq_no == m.seq_no) && (initial_sender == m.initial_sender) && (sender == m.sender));// && (vector_clock == m.vector_clock));
     }
 };
 
@@ -111,6 +114,8 @@ extern std::mutex log_m;
 extern LogMessage* messages_log;
 extern int log_pointer;
 extern ofstream out_file;
+extern std::vector<int> processes_dependencies[MAX_PROCESSES_NUM];
+extern std::vector<int> my_dependencies;
 
 //This function writes the logs received to the log file
 static void write_log(){
@@ -128,5 +133,9 @@ class deliver_callback { // @suppress("Class has a virtual method and non-virtua
     public:
         virtual void deliver(Message) = 0;
 };
+
+
+// This is for the localized causal broadcast
+
 
 #endif /* STRUCTURES_H_ */
