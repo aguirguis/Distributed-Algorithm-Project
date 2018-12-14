@@ -48,8 +48,10 @@ void perfect_link::send(int to) {
 	addr_receiver.sin_addr.s_addr = inet_addr(processes[to - 1].ip.c_str());
 	socklen_t addr_receiver_size = sizeof(addr_receiver);
 	int s;
+	char data[PACKET_SIZE];
+	serialize(mc, data);
 	send_sock_m.lock();
-		if(!(s = sendto(send_sock_all, (const char *)mc, MAX_CONTAINER_NUM*sizeof(Message) + sizeof(int), MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
+		if(!(s = sendto(send_sock_all, (const char *)data, PACKET_SIZE, MSG_WAITALL, (const struct sockaddr *) &addr_receiver, addr_receiver_size)))
 		{
 			printf("Sending message through the socket was not successful\n");
 		}
@@ -72,7 +74,7 @@ void perfect_link::send(int to) {
 */
 void perfect_link::deliver(deliver_callback *bclass) {
 	cout << "PL: waiting to deliver some messages " << endl;
-        char buf[10000];
+        char buf[PACKET_SIZE];
         m_container mc;
         ack_container ac;
 	while(1){	//always true, always waiting for messages to deliver
@@ -80,8 +82,9 @@ void perfect_link::deliver(deliver_callback *bclass) {
 		socklen_t addr_sender_size = sizeof(addr_sender);
 //		char buf[10000];
 //		m_container mc;
-		int r = recvfrom(recv_sock, &buf, 10000, MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
-		memcpy(&mc, buf, r);
+		int r = recvfrom(recv_sock, &buf, PACKET_SIZE, MSG_WAITALL, ( struct sockaddr *) &addr_sender, &addr_sender_size);
+		deserialize(buf, &mc);
+		// memcpy(&mc, buf, r);
 		// check if message is already delivered
 //		printf("Process %d received a container of %d messages from %d \n", my_process_id, mc.num, mc.c[0].sender);
 //		ack_container ac;
