@@ -1,12 +1,11 @@
 #include "frb.h"
 
-void frb::init(deliver_callback* callback) {
+void frb::init() {
     lsn = 0;
     pending = new std::list<Message>[nb_of_processes];
     next = new int[nb_of_processes];
     std::fill_n(next, nb_of_processes, 1);
 
-//    this -> callback = callback;
     urb_instance.init(this);
 }
 
@@ -24,7 +23,7 @@ void frb::frb_broadcast(Message message) {
     if(log_pointer == MAX_LOG_FILE)
    	 write_log();
 //    cout << my_process_id << " FRBBroadcast from this process" << endl;
-    // broadcast the message using urb 
+    // broadcast the message using urb
     urb_instance.urbBroadcast(message);
 }
 
@@ -45,7 +44,6 @@ void frb::frb_deliver(Message message) {
             if(message_iterator -> seq_no == next[from_index]) next[from_index]++;
 //            next_m.unlock();
             // since FRB is in contact with the application layer then it should also execute the callback received from the application layer
- //           if (callback != NULL) callback -> deliver(*message_iterator);
             urb_instance.bbb.deliver(*message_iterator);
 
             // erase the message

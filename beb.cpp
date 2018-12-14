@@ -43,8 +43,6 @@ void beb::beb_deliver(Message message) {
 	lm.seq_nr = message.seq_no;
 	messages_log[log_pointer] = lm;
 	log_pointer++;
-	if(lm.seq_nr == 0)
-		printf("This is impossible!!!! sender == 0\n");
 	if(log_pointer == MAX_LOG_FILE)
 		write_log();
 //	log_m.unlock();

@@ -15,8 +15,6 @@ using namespace std;
 
 static int wait_for_start = 1;
 
-//Process neighbors[MAX_PROCESSES_NUM];
-
 static void start(int signum) {
 	wait_for_start = 0;
 }
@@ -46,35 +44,6 @@ static void stop(int signum) {
 
 	//exit directly from signal handler
 	exit(0);
-}
-
-class pl_deliver_callback : public deliver_callback { // @suppress("Class has a virtual method and non-virtual destructor")
-    public:
-        void deliver(Message message) {
-            printf("prcoess %d has received message of sequence number %d from process %d\n", my_process_id, message.seq_no, message.initial_sender);
-        }
-};
-/*
-void test_perfect_link() {
-
-    if(my_process_id == 1) {
-        Message message;
-        message.seq_no = message.sender = message.initial_sender = 1;
-        perfect_link* pl = new perfect_link();
-        pl->messages.push(message);
-        pl -> send(2);
-    }
-    else {
-        pl_deliver_callback* callback = new pl_deliver_callback();
-        perfect_link* pl = new perfect_link();
-        pl -> deliver(callback);
-    }
-}
-*/
-beb test_bebBroadcast(){
-	beb bb;
-	bb.init(0);
-	return bb;
 }
 
 int main(int argc, char** argv) {
@@ -168,7 +137,7 @@ int main(int argc, char** argv) {
 	lcb_instance.init();
 
 	// frb fb;
-	// fb.init(new pl_deliver_callback());
+	// fb.init();
 
 	//  //wait until start signal
 	 while(wait_for_start) {

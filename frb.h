@@ -14,9 +14,8 @@ class frb : public deliver_callback { // @suppress("Class has a virtual method a
 		int* next;
 		std::mutex next_m;
         urb urb_instance;
-        deliver_callback* callback;
 
-		void init(deliver_callback* callback);
+		void init();
         void frb_broadcast(Message message);
         void frb_deliver(Message message);
         void deliver(Message message);
