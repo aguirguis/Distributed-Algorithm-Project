@@ -16,34 +16,25 @@ void urb::init(deliver_callback* callback){
 }
 
 void urb::urbBroadcast(Message message) {
-    // add itself as the immediate sender
-    // and put into the pending set
+    // add itself as the immediate sender and put into the pending set
     message.sender = my_process_id;
 //    pen_m.lock();
     pending.push_back(message);
 //    pen_m.unlock();
-    // since we did insert something in pending here,
-    // we should probably check the condition
-    // upon exists
-    // Broadcast
+
     bbb.bebBroadcast(message);
 }
 
 void urb::urb_deliver(Message message, int from) {
     // add process to acknowledgement array
     // here, we identify messages by their initial sender
-    // this may not be entirely correct,
-    // since the initial sender could send several messages.
-    // however, we leave this for another level of abstraction
 //	ack_m.lock();
     ack[message.initial_sender][message.seq_no].insert(from);
 //    ack_m.unlock();
+
     // check if pending
-    // here again, it's not entirely clear
-    // how to identify messages.
-    // this is wrong?!
     bool notInPending = true;
-    //concurrent execution with pending may create problems
+
 //    it_m.lock();
     it = pending.begin();
     while(it != pending.end()) {
@@ -74,16 +65,14 @@ void urb::deliver(Message message) {
     it = pending.begin();
     while(it != pending.end()) {
         if(candeliver(*it) && not_in_deliver(*it)) {
-        	//concurrency with delivered may create problems
 //        	del_m.lock();
             delivered.push_back(*it);
 //            printf("Process %d deliver %d %d \n", my_process_id, (*it).initial_sender, (*it).seq_no);
 //            del_m.unlock();
 			if (frb_callback != NULL){
-				if((*it).seq_no == 0)
-					printf("seq no == 0 in URB deliver!\n");
 				frb_callback -> deliver(*it);
-			}else
+			}
+			else
 	            bbb.beb_deliver(*it);
 		pen_m.lock();
 		it = pending.erase(it);
@@ -100,8 +89,6 @@ void urb::deliver(Message message) {
 bool urb::candeliver(Message message) {
     // calculate the number of acks for this message
 //	ack_m.lock();
-	if(message.seq_no == 0)
-		printf("Message has seq_no == 0 in candeliver!! at index %d \n", my_process_id);
     int nAcks = (ack[message.initial_sender][message.seq_no]).size();
 //    ack_m.unlock();
     // return statement whether majority or not

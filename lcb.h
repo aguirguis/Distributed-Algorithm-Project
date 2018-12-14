@@ -21,7 +21,6 @@ class lcb : public deliver_callback { // @suppress("Class has a virtual method a
         void deliver(Message message);
 };
 
-// TODO: update this for the localized causal broadcast
 static bool compare_vector_clocks(int v1[], int v2[]) {
     for(int i = 0; i < nb_of_processes; i++) {
         if(v1[i] > v2[i]) {

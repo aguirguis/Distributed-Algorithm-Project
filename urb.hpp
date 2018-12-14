@@ -30,7 +30,6 @@ private:
     std::mutex ack_m;
     set<int, greater <int> > ack[MAX_PROCESSES_NUM][MAX_MESSAGE_NUM];
     deliver_callback* frb_callback;
-    //Process self;
 
 public:
     beb bbb;
